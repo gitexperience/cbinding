@@ -94,10 +94,10 @@ namespace CBinding
 		}
 
 		public override Task<ICompletionDataList> HandleCodeCompletionAsync (CodeCompletionContext completionContext,
-																			 char completionChar,
+																			 CompletionTriggerInfo triggerInfo,
 																			 CancellationToken token = default (CancellationToken))
 		{
-			if (!char.IsLetter (completionChar))
+			if (triggerInfo.TriggerCharacter == null)
 				return null;
 
 			if (completionContext.TriggerOffset > 1 &&

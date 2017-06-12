@@ -407,7 +407,7 @@ namespace CBinding
 		/// <param name="context">Execution context.</param>
 		/// <param name="configuration">Configuration to execute.</param>
 		/// <returns>The execute.</returns>
-		protected async override Task DoExecute (ProgressMonitor monitor, MonoDevelop.Projects.ExecutionContext context, ConfigurationSelector configuration)
+		protected async override Task DoExecute (ProgressMonitor monitor, MonoDevelop.Projects.ExecutionContext context, ConfigurationSelector configuration, SolutionItemRunConfiguration runConfiguration)
 		{
 			var conf = (CProjectConfiguration) GetConfiguration (configuration);
 			bool pause = conf.PauseConsoleOutput;

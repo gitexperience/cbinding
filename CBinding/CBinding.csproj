@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
-  <Import Project="..\packages\MonoDevelop.Addins.0.3.10\build\net40\MonoDevelop.Addins.props" Condition="Exists('..\packages\MonoDevelop.Addins.0.3.10\build\net40\MonoDevelop.Addins.props')" />
+  <Import Project="..\packages\MonoDevelop.Addins.0.3.16\build\net45\MonoDevelop.Addins.props" Condition="Exists('..\packages\MonoDevelop.Addins.0.3.16\build\net45\MonoDevelop.Addins.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AssemblyName>MonoDevelop.CBinding</AssemblyName>
     <RootNamespace>CBinding</RootNamespace>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <AdjacentMD>..\..\monodevelop\main\build\bin</AdjacentMD>
     <MDBinDir Condition="Exists('$(AdjacentMD)')">$(AdjacentMD)</MDBinDir>
   </PropertyGroup>
@@ -153,7 +153,17 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="Mono.Data.Sqlite" />
+    <Reference Include="Mono.Data.Sqlite">
+      <HintPath>..\packages\Mono.Data.Sqlite.Portable.1.0.3.5\lib\net4\Mono.Data.Sqlite.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Data.Portable">
+      <HintPath>..\packages\Mono.Data.Sqlite.Portable.1.0.3.5\lib\net4\System.Data.Portable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Transactions.Portable">
+      <HintPath>..\packages\Mono.Data.Sqlite.Portable.1.0.3.5\lib\net4\System.Transactions.Portable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Transactions" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Project\CProject.cs" />
@@ -239,5 +249,5 @@
     <AddinReference Include="MonoDevelop.DesignerSupport" />
     <AddinReference Include="MonoDevelop.Xml" />
   </ItemGroup>
-  <Import Project="..\packages\MonoDevelop.Addins.0.3.10\build\net40\MonoDevelop.Addins.targets" Condition="Exists('..\packages\MonoDevelop.Addins.0.3.10\build\net40\MonoDevelop.Addins.targets')" />
+  <Import Project="..\packages\MonoDevelop.Addins.0.3.16\build\net45\MonoDevelop.Addins.targets" Condition="Exists('..\packages\MonoDevelop.Addins.0.3.16\build\net45\MonoDevelop.Addins.targets')" />
 </Project>
