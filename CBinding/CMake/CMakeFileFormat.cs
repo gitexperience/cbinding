@@ -46,6 +46,11 @@ namespace CBinding
 		}
 		readonly FilePath file;
 
+		public FilePath TempPath {
+			get { return tempPath; }
+		}
+		FilePath tempPath;
+
 		public CMakeProject Project {
 			get { return project; }
 		}
@@ -163,6 +168,8 @@ namespace CBinding
 			case "add_library":
 			case "add_executable":
 				targetCommands.Add (command);
+				tempPath = new FilePath(string.Format ("{0}{1}", "./", command.Arguments [0].ToString ()));
+
 				break;
 			case "add_subdirectory":
 				var temp = new FilePath (command.Arguments [0].ToString ());

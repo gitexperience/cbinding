@@ -43,7 +43,7 @@ namespace CBinding
 		string name;
 		FilePath outputDirectory = new FilePath ("./bin");
 		CMakeFileFormat fileFormat;
-
+		GeneralOptionsPanel guiOptions = new GeneralOptionsPanel ();
 		static readonly string [] supportedLanguages = { "C", "C++", "Objective-C", "Objective-C++" };
 
 		Regex extensions = new Regex (@"(\.c|\.c\+\+|\.cc|\.cpp|\.cxx|\.m|\.mm|\.h|\.hh|\.h\+\+|\.hm|\.hpp|\.hxx|\.in|\.txx)$",
@@ -261,13 +261,26 @@ namespace CBinding
 
 				FileService.CreateDirectory (file.ParentDirectory.Combine (outputDirectory));
 
+				Stream generationResult;
+				int buildFlag = 0;
 				monitor.BeginStep ("Generating build files.");
-				Stream generationResult = ExecuteCommand ("cmake", "../", outputDirectory, monitor);
+				if (guiOptions.default_c_compiler.Name == "msvc") {
+					generationResult = ExecuteCommand ("cmake", "../ -G \"Visual Studio 15 2017\"", outputDirectory, monitor);
+					buildFlag = 1;
+				} else {
+					generationResult = ExecuteCommand ("cmake", "../ -G \"MinGW Makefiles\"", outputDirectory, monitor); //Default is gcc.
+				}
 				results = ParseGenerationResult (generationResult, monitor);
 				monitor.EndStep ();
 
+				string projectMsvc = string.Format ("{0}.{1}", fileFormat.ProjectName, "sln");
 				monitor.BeginStep ("Building...");
-				Stream buildResult = ExecuteCommand ("cmake", "--build ./ --clean-first", outputDirectory, monitor);
+				if (buildFlag == 1) {
+					Stream buildResult = ExecuteCommand ("msbuild", projectMsvc, outputDirectory, monitor);
+					buildFlag = 0;
+				} else {
+					Stream buildResult = ExecuteCommand ("mingw32-make", "", outputDirectory, monitor);
+				}
 				//TODO: Parse results.
 				monitor.EndStep ();
 
@@ -306,9 +319,9 @@ namespace CBinding
 					monitor.ReportError ("Can't find an executable target.");
 					return;
 				}
-
 				FilePath f = BaseDirectory.Combine (outputDirectory);
 				NativeExecutionCommand cmd;
+
 				if (File.Exists (f.Combine (targetName)))
 					cmd = new NativeExecutionCommand (f.Combine (targetName));
 				else if (File.Exists (f.Combine (string.Format ("{0}.{1}", targetName, "exe"))))

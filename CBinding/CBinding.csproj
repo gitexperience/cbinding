@@ -243,6 +243,7 @@
     <Compile Include="gtk-gui\CBinding.TargetPickerDialog.cs" />
     <Compile Include="gtk-gui\CBinding.NewTargetDialog.cs" />
     <Compile Include="Gui\NewTargetDialog.cs" />
+    <Compile Include="Compiler\MsvcCompiler.cs" />
   </ItemGroup>
   <ItemGroup>
     <AddinReference Include="MonoDevelop.Refactoring" />

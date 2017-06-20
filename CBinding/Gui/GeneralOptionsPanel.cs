@@ -42,7 +42,7 @@ namespace CBinding
 {
 	public partial class GeneralOptionsPanel : Gtk.Bin
 	{
-		ICompiler default_c_compiler;
+		public ICompiler default_c_compiler;
 		List<ICompiler> c_compilers = new List<ICompiler> ();
 		
 		ICompiler default_cpp_compiler;
