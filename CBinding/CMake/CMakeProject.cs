@@ -321,7 +321,6 @@ namespace CBinding
 				}
 				FilePath f = BaseDirectory.Combine (outputDirectory);
 				NativeExecutionCommand cmd;
-
 				if (File.Exists (f.Combine (targetName)))
 					cmd = new NativeExecutionCommand (f.Combine (targetName));
 				else if (File.Exists (f.Combine (string.Format ("{0}.{1}", targetName, "exe"))))
