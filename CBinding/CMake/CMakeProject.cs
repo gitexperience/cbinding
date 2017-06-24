@@ -43,7 +43,11 @@ namespace CBinding
 		string name;
 		FilePath outputDirectory = new FilePath ("./bin");
 		CMakeFileFormat fileFormat;
-		GeneralOptionsPanel guiOptions = new GeneralOptionsPanel ();
+		CMakeToolchain cmakeToolchain;
+		public string DefaultCCompiler {
+			get;
+			private set;
+		}
 		static readonly string [] supportedLanguages = { "C", "C++", "Objective-C", "Objective-C++" };
 
 		Regex extensions = new Regex (@"(\.c|\.c\+\+|\.cc|\.cpp|\.cxx|\.m|\.mm|\.h|\.hh|\.h\+\+|\.hm|\.hpp|\.hxx|\.in|\.txx)$",
@@ -250,7 +254,7 @@ namespace CBinding
 		protected override Task<BuildResult> OnBuild (ProgressMonitor monitor, ConfigurationSelector configuration,
 													  OperationContext operationContext)
 		{
-			return Task.Factory.StartNew (() => {
+			return Task.Factory.StartNew (async () => {
 				BuildResult results;
 
 				if (!CheckCMake ()) {
@@ -261,30 +265,31 @@ namespace CBinding
 
 				FileService.CreateDirectory (file.ParentDirectory.Combine (outputDirectory));
 
-				Stream generationResult;
-				int buildFlag = 0;
+	//			Stream generationResult;
+				DefaultCCompiler = PropertyService.Get<string> ("CBinding.DefaultCCompiler", new GccCompiler ().Name);
 				monitor.BeginStep ("Generating build files.");
-				if (guiOptions.default_c_compiler.Name == "msvc") {
-					generationResult = ExecuteCommand ("cmake", "../ -G \"Visual Studio 15 2017\"", outputDirectory, monitor);
-					buildFlag = 1;
-				} else {
-					generationResult = ExecuteCommand ("cmake", "../ -G \"MinGW Makefiles\"", outputDirectory, monitor); //Default is gcc.
-				}
-				results = ParseGenerationResult (generationResult, monitor);
+				/*	if (guiOptions.default_c_compiler.Name == "msvc") {
+						generationResult = ExecuteCommand ("cmake", "../ -G \"Visual Studio 15 2017\"", outputDirectory, monitor);
+						buildFlag = 1;
+					} else {
+						generationResult = ExecuteCommand ("cmake", "../ -G \"MinGW Makefiles\"", outputDirectory, monitor); //Default is gcc.
+					}
+	*/        //		results = ParseGenerationResult (generationResult, monitor);
+				string projectName = string.Format ("{0}.{1}", fileFormat.ProjectName, "sln");
+				results = await cmakeToolchain.GenerateMakefiles (projectName, outputDirectory, monitor, DefaultCCompiler);
 				monitor.EndStep ();
 
-				string projectMsvc = string.Format ("{0}.{1}", fileFormat.ProjectName, "sln");
-				monitor.BeginStep ("Building...");
-				if (buildFlag == 1) {
-					Stream buildResult = ExecuteCommand ("msbuild", projectMsvc, outputDirectory, monitor);
-					buildFlag = 0;
-				} else {
-					Stream buildResult = ExecuteCommand ("mingw32-make", "", outputDirectory, monitor);
-				}
+		//		monitor.BeginStep ("Building...");
+		//		if (buildFlag == 1) {
+		//			Stream buildResult = ExecuteCommand ("msbuild", projectMsvc, outputDirectory, monitor);
+		//			buildFlag = 0;
+		//		} else {
+		//			Stream buildResult = ExecuteCommand ("mingw32-make", "", outputDirectory, monitor);
+		//		}
 				//TODO: Parse results.
-				monitor.EndStep ();
+		//		monitor.EndStep ();
 
-				return results;
+				return Task.FromResult (results);
 			});
 		}
 

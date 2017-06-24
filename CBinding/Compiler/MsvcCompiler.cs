@@ -29,15 +29,19 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-
+using System.Threading.Tasks;
 using Mono.Addins;
-
+using MonoDevelop.Projects;
+using MonoDevelop.Core;
+using System.IO;
 
 namespace CBinding
 {
 	[Extension ("/CBinding/Compilers")]
-	public class MsvcCompiler : GNUCompiler
+	public abstract class MsvcCompiler : CCompiler
 	{
+	//	MsvcCompiler compiler;
+
 		public override string Name {
 			get { return "msvc"; }
 		}
@@ -51,5 +55,25 @@ namespace CBinding
 			compilerCommand = "msvc";
 			linkerCommand = "msvc";
 		}
+
+	/*	public override Task<BuildResult> GenerateMakefiles (
+			string projectName,
+			FilePath outputDirectory,
+			ProgressMonitor monitor,
+			string buildConfiguration)
+		{
+			Stream generationResult = compiler.ExecuteCommand ("cmake", "../ -G \"Visual Studio 15 2017\"", outputDirectory, monitor);
+			BuildResult results = compiler.ParseGenerationResult (generationResult, monitor);
+			return Task.FromResult (results);
+		}
+		public override Task<BuildResult> Build (
+			string command,
+			string projectName,
+			string outputDirectory,
+			ProgressMonitor monitor)
+		{
+
+		}
+		*/
 	}
 }

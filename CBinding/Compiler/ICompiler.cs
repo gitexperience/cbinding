@@ -29,11 +29,13 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
-
+using System.Threading.Tasks;
+using System.IO;
 using Mono.Addins;
 
 using MonoDevelop.Core;
 using MonoDevelop.Projects;
+
 
 namespace CBinding
 {
@@ -43,34 +45,152 @@ namespace CBinding
 		string Name {
 			get;
 		}
-		
+
 		Language Language {
 			get;
 		}
-		
+
 		string CompilerCommand {
 			get;
 		}
-		
+
 		bool SupportsCcache {
 			get;
 		}
-		
+
 		bool SupportsPrecompiledHeaders {
 			get;
 		}
-		
+
 		string GetCompilerFlags (Project project, CProjectConfiguration configuration);
-		
+
 		string GetDefineFlags (Project project, CProjectConfiguration configuration);
-		
+
 		BuildResult Compile (
-		    Project project,
-		    ProjectFileCollection projectFiles,
-		    ProjectPackageCollection packages,
-		    CProjectConfiguration configuration,
-		    ProgressMonitor monitor);
-		
+			Project project,
+			ProjectFileCollection projectFiles,
+			ProjectPackageCollection packages,
+			CProjectConfiguration configuration,
+			ProgressMonitor monitor);
+
 		void Clean (ProjectFileCollection projectFiles, CProjectConfiguration configuration, ProgressMonitor monitor);
 	}
+
+	abstract class CMakeToolchain :CCompiler
+	{
+		CMakeToolchain cmakeToolchain;
+		VS15MSBuildToolchain vs15BuildToolchain;
+		MinGW32Toolchain mingw32Toolchain;
+		/// The name of this toolchain
+		string Name { get; }
+
+		///Whether this toolchain is installed.
+		bool IsInstalled { get; }
+
+		/// Use cmake to generate makefiles for this toolchain.
+		public virtual Task<BuildResult> GenerateMakefiles (
+			string projectName, 
+			FilePath outputDirectory, 
+			ProgressMonitor monitor, 
+			string buildConfiguration)
+		{
+			if (buildConfiguration == "msvc")
+			{
+				return (vs15BuildToolchain.GenerateMakefiles (projectName, outputDirectory, monitor));
+			} else {
+				return (mingw32Toolchain.GenerateMakefiles (projectName, outputDirectory, monitor));	//testing
+			}
+		}
+
+		/// Build using the makefiles for this toolchain.
+		public abstract Task<BuildResult> Build (string projectName, FilePath outputDirectory, ProgressMonitor monitor);
+	}	
+
+
+	abstract class VS15MSBuildToolchain : CMakeToolchain
+	{
+		VS15MSBuildToolchain vs15BuildToolchain;
+		/// The name of this toolchain
+		string Name { get; }
+
+		///Whether this toolchain is installed.
+		bool IsInstalled { get; }
+
+		/// Use cmake to generate makefiles for this toolchain.
+		public Task<BuildResult> GenerateMakefiles (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
+		{
+			Stream generationResult = vs15BuildToolchain.ExecuteCommand ("cmake", "../ -G \"Visual Studio 15 2017\"", outputDirectory, monitor);
+			BuildResult results = vs15BuildToolchain.ParseGenerationResult (generationResult, monitor);
+
+			monitor.BeginStep ("Building...");		//building
+			Stream buildResult = ExecuteCommand ("msbuild", projectName, outputDirectory, monitor);
+			monitor.EndStep ();
+
+			return Task.FromResult (results);
+		}
+
+		/// Build using the makefiles for this toolchain.
+/*		public override Task<BuildResult> Build (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
+		{
+			Stream buildResult = ExecuteCommand ("msbuild", projectName, outputDirectory, monitor);
+			BuildResult bs;
+			return Task.FromResult <BuildResult> (bs);
+		}
+		*/
+	}
+	abstract class MinGW32Toolchain : CMakeToolchain
+	{
+		MinGW32Toolchain mingw32Toolchain;
+		/// The name of this toolchain
+		string Name { get; }
+
+		///Whether this toolchain is installed.
+		bool IsInstalled { get; }
+
+		/// Use cmake to generate makefiles for this toolchain.
+		public Task<BuildResult> GenerateMakefiles (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
+		{
+			Stream generationResult = mingw32Toolchain.ExecuteCommand ("cmake", "../ -G \"Visual Studio 15 2017\"", outputDirectory, monitor);
+			BuildResult results = mingw32Toolchain.ParseGenerationResult (generationResult, monitor);
+
+			monitor.BeginStep ("Building...");		//building 
+			Stream buildResult = ExecuteCommand ("mingw32-make", "", outputDirectory, monitor);
+			monitor.EndStep ();
+
+			return Task.FromResult (results);
+		}
+
+		/// Build using the makefiles for this toolchain.
+	//	Task<BuildResult> Build (string projectName, FilePath outputDirectory, ProgressMonitor monitor);
+	}
+
+/*	abstract class UnixMakeToolchain : CMakeToolchain
+	{
+		/// The name of this toolchain
+		string Name { get; }
+
+		///Whether this toolchain is installed.
+		bool IsInstalled { get; }
+
+		/// Use cmake to generate makefiles for this toolchain.
+		Task<BuildResult> GenerateMakefiles (string projectName, FilePath outputDirectory, ProgressMonitor monitor);
+
+		/// Build using the makefiles for this toolchain.
+		Task<BuildResult> Build (string projectName, FilePath outputDirectory, ProgressMonitor monitor);
+	}
+
+	abstract class MacMakeToolchain : CMakeToolchain
+	{
+		/// The name of this toolchain
+		string Name { get; }
+
+		///Whether this toolchain is installed.
+		bool IsInstalled { get; }
+
+		/// Use cmake to generate makefiles for this toolchain.
+		Task<BuildResult> GenerateMakefiles (string projectName, FilePath outputDirectory, ProgressMonitor monitor);
+
+		/// Build using the makefiles for this toolchain.
+		Task<BuildResult> Build (string projectName, FilePath outputDirectory, ProgressMonitor monitor);
+	} */
 }

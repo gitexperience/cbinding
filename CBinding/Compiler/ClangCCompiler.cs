@@ -37,7 +37,7 @@ namespace CBinding
 {
 	[Extension ("/CBinding/Compilers")]
 	public class ClangCCompiler : GNUCompiler
-	{		
+	{
 		public override string Name {
 			get { return "clang"; }
 		}
