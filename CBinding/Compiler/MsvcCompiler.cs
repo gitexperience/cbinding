@@ -1,4 +1,4 @@
-﻿//
+//
 // MsvcCompiler.cs: Provides functionality to compile using msvc
 //
 // Authors:

@@ -1,4 +1,4 @@
-﻿//
+//
 // ClangCCompiler.cs: Provides functionality to compile using clang
 //
 // Authors:
