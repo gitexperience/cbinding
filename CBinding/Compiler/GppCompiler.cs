@@ -41,11 +41,11 @@ namespace CBinding
 		public override string Name {
 			get { return "g++"; }
 		}
-		
+
 		public override Language Language {
 			get { return Language.CPP; }
 		}
-		
+
 		public GppCompiler ()
 		{
 			compilerCommand = "g++";

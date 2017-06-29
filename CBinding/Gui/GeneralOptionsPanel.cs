@@ -42,66 +42,46 @@ namespace CBinding
 {
 	public partial class GeneralOptionsPanel : Gtk.Bin
 	{
-		ICompiler default_c_compiler;
-		List<ICompiler> c_compilers = new List<ICompiler> ();
-		
-		ICompiler default_cpp_compiler;
-		List<ICompiler> cpp_compilers = new List<ICompiler> ();
-		
+
+		CMakeToolchain default_toolchain;
+		List<CMakeToolchain> toolchain = new List<CMakeToolchain> ();
+
 		public GeneralOptionsPanel ()
 		{
 			this.Build ();
-			
-			object[] compilers = AddinManager.GetExtensionObjects ("/CBinding/Compilers");
-		
-			foreach (ICompiler compiler in compilers) {
-				if (compiler.Language == Language.C) {
-					c_compilers.Add (compiler);
-				} else if (compiler.Language == Language.CPP) {
-					cpp_compilers.Add (compiler);
-				}
+
+			object [] toolchains = AddinManager.GetExtensionObjects ("/CBinding/Toolchains");
+			foreach (CMakeToolchain Toolchain in toolchains) {
+				toolchain.Add (Toolchain);
 			}
+
+			foreach (CMakeToolchain Toolchain in toolchain)
+				cCombo.AppendText (Toolchain.ToolchainName);
 			
-			foreach (ICompiler compiler in c_compilers)
-				cCombo.AppendText (compiler.Name);
-			
-			foreach (ICompiler compiler in cpp_compilers)
-				cppCombo.AppendText (compiler.Name);
-			
-			string c_compiler = PropertyService.Get<string> ("CBinding.DefaultCCompiler", new GccCompiler ().Name);
-			string cpp_compiler = PropertyService.Get<string> ("CBinding.DefaultCppCompiler", new GppCompiler ().Name);
+			string TChain = PropertyService.Get<string> ("CBinding.DefaultToolchain", new MinGW32Toolchain ().ToolchainName);
 			ctagsEntry.Text = PropertyService.Get<string> ("CBinding.CTagsExecutable", "ctags");
 			parseSystemTagsCheck.Active = PropertyService.Get<bool> ("CBinding.ParseSystemTags", true);
 			parseLocalVariablesCheck.Active = PropertyService.Get<bool> ("CBinding.ParseLocalVariables", false);
-			
-			foreach (ICompiler compiler in c_compilers) {
-				if (compiler.Name == c_compiler) {
-					default_c_compiler = compiler;
+
+			foreach (CMakeToolchain Toolchain in toolchains) {
+				if (Toolchain.ToolchainName == TChain) {
+					default_toolchain = Toolchain;
 				}
 			}
-			
-			if (default_c_compiler == null)
-				default_c_compiler = new GccCompiler ();
-			
-			foreach (ICompiler compiler in cpp_compilers) {
-				if (compiler.Name == cpp_compiler) {
-					default_cpp_compiler = compiler;
-				}
-			}
-			
-			if (default_cpp_compiler == null)
-				default_cpp_compiler = new GppCompiler ();
+
+			if (default_toolchain == null)
+				default_toolchain = new MinGW32Toolchain ();
 			
 			int active;
 			Gtk.TreeIter iter;
 			Gtk.ListStore store;
-			
+
 			active = 0;
 			store = (Gtk.ListStore)cCombo.Model;
 			store.GetIterFirst (out iter);
-			
+
 			while (store.IterIsValid (iter)) {
-				if ((string)store.GetValue (iter, 0) == default_c_compiler.Name) {
+				if ((string)store.GetValue (iter, 0) == default_toolchain.ToolchainName) {
 					break;
 				}
 				store.IterNext (ref iter);
@@ -109,26 +89,11 @@ namespace CBinding
 			}
 
 			cCombo.Active = active;
-			
-			active = 0;
-			store = (Gtk.ListStore)cppCombo.Model;
-			store.GetIterFirst (out iter);
-			
-			while (store.IterIsValid (iter)) {
-				if ((string)store.GetValue (iter, 0) == default_cpp_compiler.Name) {
-					break;
-				}
-				store.IterNext (ref iter);
-				active++;
-			}
-
-			cppCombo.Active = active;
-		}
 		
+		}
 		public bool Store ()
 		{
-			PropertyService.Set ("CBinding.DefaultCCompiler", default_c_compiler.Name);
-			PropertyService.Set ("CBinding.DefaultCppCompiler", default_cpp_compiler.Name);
+			PropertyService.Set ("CBinding.DefaultToolchain", default_toolchain.ToolchainName);
 			PropertyService.Set ("CBinding.CTagsExecutable", ctagsEntry.Text.Trim ());
 			PropertyService.Set ("CBinding.ParseSystemTags", parseSystemTagsCheck.Active);
 			PropertyService.Set ("CBinding.ParseLocalVariables", parseLocalVariablesCheck.Active);
@@ -138,32 +103,18 @@ namespace CBinding
 
 		protected virtual void OnCComboChanged (object sender, System.EventArgs e)
 		{
-			 string activeCompiler = cCombo.ActiveText;
+			string activeToolchain = cCombo.ActiveText;
 			
-			foreach (ICompiler compiler in c_compilers) {
-				if (compiler.Name == activeCompiler) {
-				 	default_c_compiler = compiler;
+			foreach (CMakeToolchain Toolchain in toolchain) {
+				if (Toolchain.Name == activeToolchain) {
+					default_toolchain = Toolchain;
 				}
 			}
-			
-			if (default_c_compiler == null)
-				default_c_compiler = new GccCompiler ();
+
+			if (default_toolchain == null)
+				default_toolchain = new MinGW32Toolchain ();
 		}
 
-		protected virtual void OnCppComboChanged (object sender, System.EventArgs e)
-		{
-			string activeCompiler = cppCombo.ActiveText;
-			
-			foreach (ICompiler compiler in cpp_compilers) {
-				if (compiler.Name == activeCompiler) {
-				 	default_cpp_compiler = compiler;
-				}
-			}
-			
-			if (default_cpp_compiler == null)
-				default_cpp_compiler = new GppCompiler ();
-		}
-		
 		protected virtual void OnCtagsBrowseClicked (object sender, EventArgs e)
 		{
 			var dialog = new OpenFileDialog (GettextCatalog.GetString ("Choose ctags executable"), FileChooserAction.Open);

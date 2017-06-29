@@ -44,11 +44,10 @@ using System.Linq;
 
 namespace CBinding
 {
-	public abstract class CCompiler : FolderBasedProject, ICompiler
+	public abstract class CCompiler : ICompiler
 	{
 		protected string compilerCommand;
 		protected string linkerCommand;
-		FilePath file;
 
 		public abstract string Name {
 			get;
@@ -138,113 +137,6 @@ namespace CBinding
 			return output.ToString ();
 		}
 
-		Tuple<int, string> GetFileAndLine (string line, string separator)
-		{
-			int lineNumber = 0;
-			string fileName = "";
-			string s = line.Split (new string [] { separator }, StringSplitOptions.RemoveEmptyEntries) [1].Trim ();
-			string [] args = s.Split (':');
-			if (args [0].Length > 0) fileName = args [0];
-			if (args.Length > 1 && args [1].Length > 0) {
-				if (args [1].Contains ("("))
-					int.TryParse (args [1].Split ('(') [0], out lineNumber);
-				else
-					int.TryParse (args [1], out lineNumber);
-			}
 
-			return Tuple.Create (lineNumber, fileName);
-		}
-
-		protected Stream ExecuteCommand (string command, string args, string workingDir, ProgressMonitor monitor)
-		{
-			var stream = new MemoryStream ();
-			var streamWriter = new StreamWriter (stream);
-			FilePath path = file.ParentDirectory.Combine (workingDir);
-			ProcessWrapper p = Runtime.ProcessService.StartProcess (command, args, path, monitor.Log, streamWriter, null);
-			p.WaitForExit ();
-			streamWriter.Flush ();
-			stream.Position = 0;
-			return stream;
-		}
-
-		protected BuildResult ParseGenerationResult (Stream result, ProgressMonitor monitor)
-		{
-			var results = new BuildResult ();
-			result.Position = 0;
-			var sr = new StreamReader (result);
-			var sb = new StringBuilder ();
-			string line;
-			string fileName = "";
-			int lineNumber = 0;
-			bool isWarning = false;
-
-			while ((line = sr.ReadLine ()) != null) {
-				//e.g.	CMake Warning in/at CMakeLists.txt:10 (COMMAND):
-				//or:	CMake Warning:
-				if (line.StartsWith ("CMake Warning", StringComparison.OrdinalIgnoreCase)) {
-					//reset everything and add last error or warning.
-					if (sb.Length > 0) {
-						if (isWarning)
-							results.AddWarning (BaseDirectory.Combine (fileName), lineNumber, 0, "", sb.ToString ());
-						else
-							results.AddError (BaseDirectory.Combine (fileName), lineNumber, 0, "", sb.ToString ());
-					}
-
-					sb.Clear ();
-					fileName = "";
-					lineNumber = 0;
-					isWarning = true;
-
-					// in/at CMakeLists.txt:10 (COMMAND):
-					if (line.Contains (" in ")) {
-						Tuple<int, string> t = GetFileAndLine (line, " in ");
-						lineNumber = t.Item1;
-						fileName = t.Item2;
-					} else if (line.Contains (" at ")) {
-						Tuple<int, string> t = GetFileAndLine (line, " at ");
-						lineNumber = t.Item1;
-						fileName = t.Item2;
-					} else {
-						string [] warning = line.Split (':');
-						if (!string.IsNullOrEmpty (warning.ElementAtOrDefault (1))) {
-							sb.Append (warning [1]);
-						}
-					}
-				} else if (line.StartsWith ("CMake Error", StringComparison.OrdinalIgnoreCase)) {
-					//reset everything and add last error or warning.
-					if (sb.Length > 0) {
-						if (isWarning)
-							results.AddWarning (BaseDirectory.Combine (fileName), lineNumber, 0, "", sb.ToString ());
-						else
-							results.AddError (BaseDirectory.Combine (fileName), lineNumber, 0, "", sb.ToString ());
-					}
-
-					sb.Clear ();
-					fileName = "";
-					lineNumber = 0;
-					isWarning = false;
-
-					// in/at CMakeLists.txt:10 (COMMAND):
-					if (line.Contains (" in ")) {
-						Tuple<int, string> t = GetFileAndLine (line, " in ");
-						lineNumber = t.Item1;
-						fileName = t.Item2;
-					} else if (line.Contains (" at ")) {
-						Tuple<int, string> t = GetFileAndLine (line, " at ");
-						lineNumber = t.Item1;
-						fileName = t.Item2;
-					} else {
-						string [] error = line.Split (':');
-						if (!string.IsNullOrEmpty (error.ElementAtOrDefault (1))) {
-							sb.Append (error [1]);
-						}
-					}
-				} else {
-					sb.Append (line);
-				}
-			}
-
-			return results;
-		}
 	}
 }

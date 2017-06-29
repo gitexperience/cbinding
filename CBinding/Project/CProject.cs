@@ -1,4 +1,4 @@
-//
+﻿//
 // CProject.cs: C/C++ Project
 //
 // Authors:
@@ -45,29 +45,31 @@ using MonoDevelop.Projects;
 
 namespace CBinding
 {
-	public enum Language {
+	public enum Language
+	{
 		C,
 		CPP,
 		OBJC,
 		OBJCPP
 	}
-	
-	public enum CProjectCommands {
+
+	public enum CProjectCommands
+	{
 		AddPackage,
 		UpdateClassPad,
 		ShowPackageDetails,
 		GotoDeclaration,
 	}
 
-	[ExportProjectType ("{2857B73E-F847-4B02-9238-064979017E93}", Extension="cproj", Alias="C/C++")]
+	[ExportProjectType ("{2857B73E-F847-4B02-9238-064979017E93}", Extension = "cproj", Alias = "C/C++")]
 	public class CProject : Project
 	{
-		[ItemProperty ("Compiler", ValueType = typeof(CCompiler))]
+		[ItemProperty ("Compiler", ValueType = typeof (CCompiler))]
 		public ICompiler CompilerManager { get; set; }
-		
+
 		[ItemProperty ("Language")]
 		public Language Language { get; set; }
-		
+
 		[ItemProperty ("OutputType", DefaultValue = CompileTarget.Exe)]
 		public CompileTarget target { get; set; }
 
@@ -80,19 +82,19 @@ namespace CBinding
 		public UnsavedFilesManager UnsavedFiles { get; private set; }
 
 		ProjectPackageCollection packages = new ProjectPackageCollection ();
-		
+
 		public event ProjectPackageEventHandler PackageAddedToProject;
 		public event ProjectPackageEventHandler PackageRemovedFromProject;
 
 		/// <summary>
 		/// Extensions for C/C++ source files
 		/// </summary>
-		public static string[] SourceExtensions = { ".C", ".CC", ".CPP", ".CXX", ".M", ".MM" };
-		
+		public static string [] SourceExtensions = { ".C", ".CC", ".CPP", ".CXX", ".M", ".MM" };
+
 		/// <summary>
 		/// Extensions for C/C++ header files
 		/// </summary>
-		public static string[] HeaderExtensions = { ".H", ".HH", ".HPP", ".HXX" };
+		public static string [] HeaderExtensions = { ".H", ".HH", ".HPP", ".HXX" };
 
 		/// <summary>
 		/// Initialize this instance.
@@ -128,7 +130,7 @@ namespace CBinding
 			Compiler = null; // use default compiler depending on language
 			var configuration =
 				(CProjectConfiguration)CreateConfiguration ("Debug");
-			configuration.DefineSymbols = "DEBUG MONODEVELOP";		
+			configuration.DefineSymbols = "DEBUG MONODEVELOP";
 			configuration.DebugSymbols = true;
 			Configurations.Add (configuration);
 
@@ -164,7 +166,7 @@ namespace CBinding
 					}
 					if (template.Attributes ["Target"] != null) {
 						c.CompileTarget = (CompileTarget)Enum.Parse (
-							typeof(CompileTarget),
+							typeof (CompileTarget),
 							template.Attributes ["Target"].InnerText);
 					}
 					if (template.GetAttribute ("ExternalConsole") == "True") {
@@ -196,9 +198,9 @@ namespace CBinding
 		/// <summary>
 		/// Returns with the languages supported by the project
 		/// </summary>
-		protected override string[] OnGetSupportedLanguages ()
+		protected override string [] OnGetSupportedLanguages ()
 		{
-			return new string[] { "C", "C++", "Objective-C", "Objective-C++" };
+			return new string [] { "C", "C++", "Objective-C", "Objective-C++" };
 		}
 
 		/// <summary>
@@ -217,7 +219,7 @@ namespace CBinding
 		protected override bool OnGetIsCompileable (string fileName)
 		{
 			string ext = Path.GetExtension (fileName.ToUpper ());
-			return (-1 != Array.IndexOf (SourceExtensions, ext) || -1 != Array.IndexOf (HeaderExtensions, ext) );
+			return (-1 != Array.IndexOf (SourceExtensions, ext) || -1 != Array.IndexOf (HeaderExtensions, ext));
 		}
 
 		/// <summary>
@@ -250,48 +252,48 @@ namespace CBinding
 		{
 			return (0 <= Array.IndexOf (HeaderExtensions, Path.GetExtension (filename.ToUpper ())));
 		}
-		
+
 		/// <summary>
 		/// Ths pkg-config package is for internal MonoDevelop use only, it is not deployed.
 		/// </summary>
 		public void WriteMDPkgPackage (ConfigurationSelector configuration)
 		{
 			string pkgfile = Path.Combine (BaseDirectory, Name + ".md.pc");
-			
+
 			CProjectConfiguration config = (CProjectConfiguration)GetConfiguration (configuration);
 			while (config == null) {
 				Thread.Sleep (20);
 				config = (CProjectConfiguration)GetConfiguration (configuration);
 			}
-			
+
 			List<string> headerDirectories = new List<string> ();
-			
+
 			foreach (ProjectFile f in Files) {
 				if (IsHeaderFile (f.Name)) {
 					string dir = Path.GetDirectoryName (f.FilePath);
-					
+
 					if (!headerDirectories.Contains (dir)) {
 						headerDirectories.Add (dir);
 					}
 				}
 			}
-			
+
 			using (StreamWriter writer = new StreamWriter (pkgfile)) {
 				writer.WriteLine ("Name: {0}", Name);
 				writer.WriteLine ("Description: {0}", Description);
 				writer.WriteLine ("Version: {0}", Version);
-				writer.WriteLine ("Libs: -L\"{0}\" -l{1}", config.OutputDirectory, config.Output.StartsWith ("lib", StringComparison.OrdinalIgnoreCase)?
-				                                                                                                config.Output.Substring (3):
-				                                                                                                config.Output);
-//				writer.WriteLine ("Cflags: -I{0}", BaseDirectory);
+				writer.WriteLine ("Libs: -L\"{0}\" -l{1}", config.OutputDirectory, config.Output.StartsWith ("lib", StringComparison.OrdinalIgnoreCase) ?
+																												config.Output.Substring (3) :
+																												config.Output);
+				//				writer.WriteLine ("Cflags: -I{0}", BaseDirectory);
 				writer.WriteLine ("Cflags: -I\"{0}\"", string.Join ("\" -I\"", headerDirectories.ToArray ()));
 			}
-			
+
 			// If this project compiles into a shared object we need to
 			// export the output path to the LD_LIBRARY_PATH
 			string literal = "LD_LIBRARY_PATH";
 			string ld_library_path = Environment.GetEnvironmentVariable (literal);
-			
+
 			if (string.IsNullOrEmpty (ld_library_path)) {
 				Environment.SetEnvironmentVariable (literal, config.OutputDirectory);
 			} else if (!ld_library_path.Contains (config.OutputDirectory)) {
@@ -299,7 +301,7 @@ namespace CBinding
 				Environment.SetEnvironmentVariable (literal, ld_library_path);
 			}
 		}
-		
+
 		/// <summary>
 		/// This is the pkg-config package that gets deployed.
 		/// <returns>The pkg-config package's filename</returns>
@@ -309,7 +311,7 @@ namespace CBinding
 			// FIXME: This should probably be grabed from somewhere.
 			string prefix = "/usr/local";
 			string pkgfile = Path.Combine (BaseDirectory, Name + ".pc");
-			
+
 			using (StreamWriter writer = new StreamWriter (pkgfile)) {
 				writer.WriteLine ("prefix={0}", prefix);
 				writer.WriteLine ("exec_prefix=${prefix}");
@@ -323,13 +325,13 @@ namespace CBinding
 				// TODO: How should I get this?
 				writer.WriteLine ("Conflicts: {0}", string.Empty);
 				writer.Write ("Libs: -L${libdir} ");
-				writer.WriteLine ("-l{0}", config.Output.StartsWith ("lib", StringComparison.OrdinalIgnoreCase)?
-				                                                            config.Output.Substring (3):
-				                                                            config.Output);
+				writer.WriteLine ("-l{0}", config.Output.StartsWith ("lib", StringComparison.OrdinalIgnoreCase) ?
+																			config.Output.Substring (3) :
+																			config.Output);
 				writer.Write ("Cflags: -I${includedir}/");
 				writer.WriteLine ("{0} {1}", Name, Compiler.GetDefineFlags (project, config));
 			}
-			
+
 			return pkgfile;
 		}
 
@@ -343,7 +345,7 @@ namespace CBinding
 		///  be copied before calling this method.</remarks>
 		protected override Task<BuildResult> DoBuild (ProgressMonitor monitor, ConfigurationSelector configuration)
 		{
-			var pc = (CProjectConfiguration) GetConfiguration (configuration);
+			var pc = (CProjectConfiguration)GetConfiguration (configuration);
 			pc.SourceDirectory = BaseDirectory;
 
 			return Task<BuildResult>.Factory.StartNew (delegate {
@@ -362,7 +364,7 @@ namespace CBinding
 		/// <param name="operationContext">Operation context.</param>
 		protected async override Task<BuildResult> OnClean (ProgressMonitor monitor, ConfigurationSelector configuration, OperationContext operationContext)
 		{
-			var conf = (CProjectConfiguration) GetConfiguration (configuration);
+			var conf = (CProjectConfiguration)GetConfiguration (configuration);
 
 			var res = await base.OnClean (monitor, configuration, operationContext);
 			if (res.HasErrors)
@@ -395,7 +397,7 @@ namespace CBinding
 		/// <param name="solutionConfiguration">Solution configuration.</param>
 		protected override bool OnGetCanExecute (MonoDevelop.Projects.ExecutionContext context, ConfigurationSelector solutionConfiguration)
 		{
-			var conf = (CProjectConfiguration) GetConfiguration (solutionConfiguration);
+			var conf = (CProjectConfiguration)GetConfiguration (solutionConfiguration);
 			ExecutionCommand cmd = CreateExecutionCommand (conf);
 			return (target == CompileTarget.Exe) && context.ExecutionHandler.CanExecute (cmd);
 		}
@@ -409,22 +411,22 @@ namespace CBinding
 		/// <returns>The execute.</returns>
 		protected async override Task DoExecute (ProgressMonitor monitor, MonoDevelop.Projects.ExecutionContext context, ConfigurationSelector configuration, SolutionItemRunConfiguration runConfiguration)
 		{
-			var conf = (CProjectConfiguration) GetConfiguration (configuration);
+			var conf = (CProjectConfiguration)GetConfiguration (configuration);
 			bool pause = conf.PauseConsoleOutput;
 			OperationConsole console;
-			
+
 			if (conf.CompileTarget != CompileTarget.Exe) {
 				MessageService.ShowMessage ("Compile target is not an executable!");
 				return;
 			}
-			
+
 			monitor.Log.WriteLine ("Running project...");
-			
+
 			if (conf.ExternalConsole)
 				console = context.ExternalConsoleFactory.CreateConsole (!pause, monitor.CancellationToken);
 			else
 				console = context.ConsoleFactory.CreateConsole (monitor.CancellationToken);
-			
+
 			try {
 				ExecutionCommand cmd = CreateExecutionCommand (conf);
 				if (!context.ExecutionHandler.CanExecute (cmd)) {
@@ -435,12 +437,12 @@ namespace CBinding
 				ProcessAsyncOperation op = context.ExecutionHandler.Execute (cmd, console);
 				using (var t = monitor.CancellationToken.Register (op.Cancel))
 					await op.Task;
-				
+
 				monitor.Log.WriteLine ("The operation exited with code: {0}", op.ExitCode);
 			} catch (Exception ex) {
 				LoggingService.LogError (string.Format ("Cannot execute \"{0}\"", conf.Output), ex);
 				monitor.ReportError ("Cannot execute \"" + conf.Output + "\"", ex);
-			} finally {			
+			} finally {
 				console.Dispose ();
 			}
 		}
@@ -450,7 +452,7 @@ namespace CBinding
 		/// <param name="configuration">Configuration.</param>
 		protected override FilePath OnGetOutputFileName (ConfigurationSelector configuration)
 		{
-			var conf = (CProjectConfiguration) GetConfiguration (configuration);
+			var conf = (CProjectConfiguration)GetConfiguration (configuration);
 			return conf.OutputDirectory.Combine (conf.CompiledOutputName);
 		}
 
@@ -474,14 +476,14 @@ namespace CBinding
 			types.Add ("C/C++");
 			types.Add ("Native");
 		}
-			
+
 		public ICompiler Compiler {
 			get { return CompilerManager; }
 			set {
 				if (value != null) {
 					CompilerManager = value;
 				} else {
-					object[] compilers = AddinManager.GetExtensionObjects ("/CBinding/Compilers");
+					object [] compilers = AddinManager.GetExtensionObjects ("/CBinding/Compilers");
 					string compiler;
 
 					// TODO: This should depend on platform (eg: windows would be mingw or msvc)
@@ -489,7 +491,7 @@ namespace CBinding
 						compiler = PropertyService.Get ("CBinding.DefaultCCompiler", new GccCompiler ().Name);
 					else
 						compiler = PropertyService.Get ("CBinding.DefaultCppCompiler", new GppCompiler ().Name);
-					
+
 					foreach (ICompiler c in compilers) {
 						if (compiler == c.Name) {
 							CompilerManager = c;
@@ -500,7 +502,7 @@ namespace CBinding
 		}
 
 		// TODO NPM: not supported
-		[Browsable(false)]
+		[Browsable (false)]
 		[ItemProperty ("Packages")]
 		public ProjectPackageCollection Packages {
 			get { return packages; }
@@ -515,7 +517,7 @@ namespace CBinding
 			Runtime.AssertMainThread ();
 			PackageRemovedFromProject (this, new ProjectPackageEventArgs (this, package));
 		}
-		
+
 		internal void NotifyPackageAddedToProject (Package package)
 		{
 			Runtime.AssertMainThread ();
@@ -533,17 +535,18 @@ namespace CBinding
 		/// The corresponding file, or null if not found
 		/// <see cref="System.String"/>
 		/// </returns>
-		public string MatchingFile (string sourceFile) {
+		public string MatchingFile (string sourceFile)
+		{
 			string filenameStub = Path.GetFileNameWithoutExtension (sourceFile);
 			bool wantHeader = !CProject.IsHeaderFile (sourceFile);
-			
+
 			foreach (ProjectFile file in this.Files) {
-				if (filenameStub == Path.GetFileNameWithoutExtension (file.Name) 
+				if (filenameStub == Path.GetFileNameWithoutExtension (file.Name)
 				   && (wantHeader == IsHeaderFile (file.Name))) {
 					return file.Name;
 				}
 			}
-			
+
 			return null;
 		}
 	}

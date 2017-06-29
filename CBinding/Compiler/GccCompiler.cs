@@ -37,15 +37,15 @@ namespace CBinding
 {
 	[Extension ("/CBinding/Compilers")]
 	public class GccCompiler : GNUCompiler
-	{		
+	{
 		public override string Name {
 			get { return "gcc"; }
 		}
-		
+
 		public override Language Language {
 			get { return Language.C; }
 		}
-		
+
 		public GccCompiler ()
 		{
 			compilerCommand = "gcc";

@@ -44,7 +44,7 @@ namespace CBinding
 		FilePath outputDirectory = new FilePath ("./bin");
 		CMakeFileFormat fileFormat;
 		CMakeToolchain cmakeToolchain;
-		public string DefaultCCompiler {
+		public string DefaultToolchain {
 			get;
 			private set;
 		}
@@ -251,46 +251,25 @@ namespace CBinding
 			}
 		}
 
-		protected override Task<BuildResult> OnBuild (ProgressMonitor monitor, ConfigurationSelector configuration,
+		protected async override Task<BuildResult> OnBuild (ProgressMonitor monitor, ConfigurationSelector configuration,
 													  OperationContext operationContext)
 		{
-			return Task.Factory.StartNew (async () => {
-				BuildResult results;
+			BuildResult results;
 
-				if (!CheckCMake ()) {
-					results = new BuildResult ();
-					results.AddError ("CMake cannot be found.");
-					return results;
-				}
+			if (!CheckCMake ()) {
+				results = new BuildResult ();
+				results.AddError ("CMake cannot be found.");
+				return results;
+			}
 
-				FileService.CreateDirectory (file.ParentDirectory.Combine (outputDirectory));
+			FileService.CreateDirectory (file.ParentDirectory.Combine (outputDirectory));
 
-	//			Stream generationResult;
-				DefaultCCompiler = PropertyService.Get<string> ("CBinding.DefaultCCompiler", new GccCompiler ().Name);
-				monitor.BeginStep ("Generating build files.");
-				/*	if (guiOptions.default_c_compiler.Name == "msvc") {
-						generationResult = ExecuteCommand ("cmake", "../ -G \"Visual Studio 15 2017\"", outputDirectory, monitor);
-						buildFlag = 1;
-					} else {
-						generationResult = ExecuteCommand ("cmake", "../ -G \"MinGW Makefiles\"", outputDirectory, monitor); //Default is gcc.
-					}
-	*/        //		results = ParseGenerationResult (generationResult, monitor);
-				string projectName = string.Format ("{0}.{1}", fileFormat.ProjectName, "sln");
-				results = await cmakeToolchain.GenerateMakefiles (projectName, outputDirectory, monitor, DefaultCCompiler);
-				monitor.EndStep ();
+			DefaultToolchain = PropertyService.Get<string> ("CBinding.DefaultToolchain", new MinGW32Toolchain ().Name);
+			cmakeToolchain = CMakeToolchain.GetToolchain (DefaultToolchain);
+			results = await cmakeToolchain.GenerateMakefiles (fileFormat.ProjectName, outputDirectory, monitor);
 
-		//		monitor.BeginStep ("Building...");
-		//		if (buildFlag == 1) {
-		//			Stream buildResult = ExecuteCommand ("msbuild", projectMsvc, outputDirectory, monitor);
-		//			buildFlag = 0;
-		//		} else {
-		//			Stream buildResult = ExecuteCommand ("mingw32-make", "", outputDirectory, monitor);
-		//		}
-				//TODO: Parse results.
-		//		monitor.EndStep ();
+			return results;
 
-				return Task.FromResult (results);
-			});
 		}
 
 		protected override Task<BuildResult> OnClean (ProgressMonitor monitor, ConfigurationSelector configuration,
