@@ -1,4 +1,4 @@
-﻿//
+//
 // CProject.cs: C/C++ Project
 //
 // Authors:

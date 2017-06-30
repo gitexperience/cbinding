@@ -106,7 +106,7 @@ namespace CBinding
 			string activeToolchain = cCombo.ActiveText;
 			
 			foreach (CMakeToolchain Toolchain in toolchain) {
-				if (Toolchain.Name == activeToolchain) {
+				if (Toolchain.ToolchainName == activeToolchain) {
 					default_toolchain = Toolchain;
 				}
 			}

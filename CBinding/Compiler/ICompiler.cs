@@ -218,7 +218,7 @@ namespace CBinding
 		{
 			OperatingSystem os = Environment.OSVersion;
 			if (os.Platform == PlatformID.Win32Windows || os.Platform == PlatformID.Win32S || os.Platform == PlatformID.WinCE || os.Platform == PlatformID.Win32NT) {
-				if (toolchainName == "msvc")
+				if (toolchainName == "VS15 MSBuild Toolchain")
 					return new VS15MSBuildToolchain ();
 				else return new MinGW32Toolchain ();
 			} else if (os.Platform == PlatformID.Unix)
