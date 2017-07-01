@@ -122,6 +122,11 @@ namespace CBinding
 			return Tuple.Create (lineNumber, fileName);
 		}
 
+		public void setFileLocation (string file)
+		{
+			this.file = file;
+		}
+
 		protected Stream ExecuteCommand (string command, string args, string workingDir, ProgressMonitor monitor)
 		{
 			var stream = new MemoryStream ();
