@@ -35,7 +35,6 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Text;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 using Mono.Addins;
 
@@ -225,6 +224,10 @@ namespace CBinding
 			if (os.Platform == PlatformID.Win32Windows || os.Platform == PlatformID.Win32S || os.Platform == PlatformID.WinCE || os.Platform == PlatformID.Win32NT) {
 				if (toolchainName == "VS15 MSBuild Toolchain")
 					return new VS15MSBuildToolchain ();
+				else if (toolchainName == "VS14 MSBuild Toolchain")
+					return new VS14MSBuildToolchain ();
+				else if (toolchainName == "VS12 MSBuild Toolchain")
+					return new VS12MSBuildToolchain ();
 				else return new MinGW32Toolchain ();
 			} else if (os.Platform == PlatformID.Unix)
 					return new UnixMakeToolchain ();
@@ -261,6 +264,70 @@ namespace CBinding
 			monitor.EndStep ();
 
 			string projectToBuild = $"{projectName}.\"sln\""; 
+			monitor.BeginStep ("Building...");
+			Stream buildResult = ExecuteCommand ("msbuild", projectToBuild, outputDirectory, monitor);
+			monitor.EndStep ();
+
+			return Task.FromResult (results);
+		}
+
+	}
+
+	[Extension ("/CBinding/Toolchains")]
+	public class VS14MSBuildToolchain : CMakeToolchain
+	{
+
+		/// <summary>
+		/// The name of this Toolchain.
+		/// </summary>
+		/// <value>The name.</value>
+		public override string ToolchainName {
+			get {
+				return "VS14 MSBuild Toolchain";
+			}
+		}
+
+		/// Use cmake to generate makefiles for this toolchain.
+		public override Task<BuildResult> GenerateMakefiles (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
+		{
+			monitor.BeginStep ("Generating build files...");
+			Stream generationResult = ExecuteCommand ("cmake", "../ -G \"Visual Studio 14 2015\"", outputDirectory, monitor);
+			BuildResult results = ParseGenerationResult (generationResult, monitor);
+			monitor.EndStep ();
+
+			string projectToBuild = $"{projectName}.\"sln\"";
+			monitor.BeginStep ("Building...");
+			Stream buildResult = ExecuteCommand ("msbuild", projectToBuild, outputDirectory, monitor);
+			monitor.EndStep ();
+
+			return Task.FromResult (results);
+		}
+
+	}
+
+	[Extension ("/CBinding/Toolchains")]
+	public class VS12MSBuildToolchain : CMakeToolchain
+	{
+
+		/// <summary>
+		/// The name of this Toolchain.
+		/// </summary>
+		/// <value>The name.</value>
+		public override string ToolchainName {
+			get {
+				return "VS12 MSBuild Toolchain";
+			}
+		}
+
+		/// Use cmake to generate makefiles for this toolchain.
+		public override Task<BuildResult> GenerateMakefiles (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
+		{
+			monitor.BeginStep ("Generating build files...");
+			Stream generationResult = ExecuteCommand ("cmake", "../ -G \"Visual Studio 12 2013\"", outputDirectory, monitor);
+			BuildResult results = ParseGenerationResult (generationResult, monitor);
+			monitor.EndStep ();
+
+			string projectToBuild = $"{projectName}.\"sln\"";
 			monitor.BeginStep ("Building...");
 			Stream buildResult = ExecuteCommand ("msbuild", projectToBuild, outputDirectory, monitor);
 			monitor.EndStep ();
