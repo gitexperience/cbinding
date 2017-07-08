@@ -228,6 +228,8 @@ namespace CBinding
 					return new VS14MSBuildToolchain ();
 				else if (toolchainName == "VS12 MSBuild Toolchain")
 					return new VS12MSBuildToolchain ();
+				else if (toolchainName == "Clang Toolchain")
+					return new ClangToolchain ();
 				else return new MinGW32Toolchain ();
 			} else if (os.Platform == PlatformID.Unix)
 					return new UnixMakeToolchain ();
@@ -335,6 +337,38 @@ namespace CBinding
 			return Task.FromResult (results);
 		}
 
+	}
+
+	[Extension ("/CBinding/Toolchains")]
+	public class ClangToolchain : CMakeToolchain
+	{
+
+		/// <summary>
+		/// The name of this Toolchain.
+		/// </summary>
+		/// <value>The name.</value>
+		public override string ToolchainName {
+			get {
+				return "Clang Toolchain";
+			}
+		}
+
+		/// Use cmake to generate makefiles for this toolchain.
+		public override Task<BuildResult> GenerateMakefiles (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
+		{
+			monitor.BeginStep ("Generating build files...");
+			//Made it a little bit specific, though VS14 2015 can also be used ..  
+			Stream generationResult = ExecuteCommand ("cmake", "../ -G\"Visual Studio 15 2017\" -T\"LLVM-vs2014\"", outputDirectory, monitor);
+			BuildResult results = ParseGenerationResult (generationResult, monitor);
+			monitor.EndStep ();
+
+			string projectToBuild = $"{projectName}.\"sln\"";
+			monitor.BeginStep ("Building...");
+			Stream buildResult = ExecuteCommand ("msbuild", projectToBuild, outputDirectory, monitor);
+			monitor.EndStep ();
+
+			return Task.FromResult (results);
+		}
 	}
 
 	[Extension ("/CBinding/Toolchains")]
