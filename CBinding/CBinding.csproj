@@ -169,7 +169,6 @@
     <Compile Include="Gui\CompilerPanel.cs" />
     <Compile Include="gtk-gui\CBinding.CodeGenerationPanel.cs" />
     <Compile Include="gtk-gui\CBinding.CompilerPanel.cs" />
-    <Compile Include="Compiler\ICompiler.cs" />
     <Compile Include="Gui\EditPackagesDialog.cs" />
     <Compile Include="gtk-gui\CBinding.EditPackagesDialog.cs" />
     <Compile Include="Project\Package.cs" />
@@ -204,11 +203,9 @@
     <Compile Include="Refactoring\GotoDefinitionHandler.cs" />
     <Compile Include="Refactoring\RefactoryCommands.cs" />
     <Compile Include="Refactoring\GotoDeclarationHandler.cs" />
-    <Compile Include="Parser\CDocumentParser.cs" />
     <Compile Include="Gui\RenameHandlerDialog.cs" />
     <Compile Include="gtk-gui\CBinding.RenameHandlerDialog.cs" />
     <Compile Include="Parser\OverloadCandidate.cs" />
-    <Compile Include="Parser\CParsedDocument.cs" />
     <Compile Include="Project\UnsavedFilesManager.cs" />
     <Compile Include="Project\UnsavedFile.cs" />
     <Compile Include="Parser\SymbolDatabaseMediator.cs" />
@@ -238,6 +235,16 @@
     <Compile Include="Project\ProjectPackageEventArgs.cs" />
     <Compile Include="Compiler\GccCompiler.cs" />
     <Compile Include="Compiler\GppCompiler.cs" />
+    <Compile Include="Compiler\VS12MSBuildToolchain.cs" />
+    <Compile Include="Compiler\ICompiler.cs" />
+    <Compile Include="Compiler\CMakeToolchain.cs" />
+    <Compile Include="Compiler\MSBuildToolchain.cs" />
+    <Compile Include="Compiler\VS15MSBuildToolchain.cs" />
+    <Compile Include="Compiler\VS14MSBuildToolchain.cs" />
+    <Compile Include="Compiler\MinGW32Toolchain.cs" />
+    <Compile Include="Compiler\ClangToolchain.cs" />
+    <Compile Include="Compiler\UnixMakeToolchain.cs" />
+    <Compile Include="Compiler\MacMakeToolchain.cs" />
   </ItemGroup>
   <ItemGroup>
     <AddinReference Include="MonoDevelop.Refactoring" />

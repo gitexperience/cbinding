@@ -1,11 +1,9 @@
 //
-// ICompiler.cs: interface that must be implemented by any class that wants
-// to provide a compiler for the CBinding addin.
+// VS15MSBuildToolchain.cs: Provides functionality to compile using VS15 MSBuild Toolchain.
 //
 // Authors:
-//   Marcos David Marin Amador <MarcosMarin@gmail.com>
-//
-// Copyright (C) 2007 Marcos David Marin Amador
+//   Anubhav Singh <mailtoanubhav02@gmail.com>
+// Copyright (C) 2017 Anubhav Singh
 //
 //
 // This source code is licenced under The MIT License:
@@ -30,53 +28,28 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-using System.Threading.Tasks;
-using System.IO;
-using System.Text;
-using System.Linq;
-
 using Mono.Addins;
-
-using MonoDevelop.Core;
-using MonoDevelop.Projects;
-using MonoDevelop.Core.Execution;
 
 namespace CBinding
 {
-	public interface ICompiler
+	[Extension ("/CBinding/Toolchains")]
+	public class VS15MSBuildToolchain : MSBuildToolchain
 	{
-		string Name {
-			get;
+
+		/// <summary>
+		/// The name of this Toolchain.
+		/// </summary>
+		/// <value>The name.</value>
+		public override string ToolchainName {
+			get {
+				return "VS15 MSBuild Toolchain";
+			}
 		}
 
-		Language Language {
-			get;
+		public override string GeneratorID {
+			get {
+				return "Visual Studio 15 2017";
+			}
 		}
-
-		string CompilerCommand {
-			get;
-		}
-
-		bool SupportsCcache {
-			get;
-		}
-
-		bool SupportsPrecompiledHeaders {
-			get;
-		}
-
-		string GetCompilerFlags (Project project, CProjectConfiguration configuration);
-
-		string GetDefineFlags (Project project, CProjectConfiguration configuration);
-
-		BuildResult Compile (
-			Project project,
-			ProjectFileCollection projectFiles,
-			ProjectPackageCollection packages,
-			CProjectConfiguration configuration,
-			ProgressMonitor monitor);
-
-		void Clean (ProjectFileCollection projectFiles, CProjectConfiguration configuration, ProgressMonitor monitor);
 	}
 }

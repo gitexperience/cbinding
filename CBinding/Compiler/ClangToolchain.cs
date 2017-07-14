@@ -1,11 +1,9 @@
 //
-// ICompiler.cs: interface that must be implemented by any class that wants
-// to provide a compiler for the CBinding addin.
+// ClangToolchain.cs: Provides functionality to compile using Clang Toolchain.
 //
 // Authors:
-//   Marcos David Marin Amador <MarcosMarin@gmail.com>
-//
-// Copyright (C) 2007 Marcos David Marin Amador
+//   Anubhav Singh <mailtoanubhav02@gmail.com>
+// Copyright (C) 2017 Anubhav Singh
 //
 //
 // This source code is licenced under The MIT License:
@@ -30,53 +28,58 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
 using System.Threading.Tasks;
 using System.IO;
-using System.Text;
-using System.Linq;
 
 using Mono.Addins;
 
 using MonoDevelop.Core;
 using MonoDevelop.Projects;
-using MonoDevelop.Core.Execution;
 
 namespace CBinding
 {
-	public interface ICompiler
+	[Extension ("/CBinding/Toolchains")]
+	public class ClangToolchain : CMakeToolchain
 	{
-		string Name {
-			get;
+
+		/// <summary>
+		/// The name of this Toolchain.
+		/// </summary>
+		/// <value>The name.</value>
+		public override string ToolchainName {
+			get {
+				return "Clang Toolchain";
+			}
 		}
 
-		Language Language {
-			get;
+		public override string GeneratorID {
+			get {
+				return "Visual Studio 15 2017";
+			}
 		}
 
-		string CompilerCommand {
-			get;
+		public override string ToolchainID {
+			get {
+				return "LLVM-vs2014";
+			}
 		}
 
-		bool SupportsCcache {
-			get;
+		public override string ProjectToBuild {
+			get { return projectToBuild; }
+			set {
+				projectToBuild = value;
+			}
 		}
+		public string projectToBuild = "";
 
-		bool SupportsPrecompiledHeaders {
-			get;
+		public override Task<Stream> Build (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
+		{
+			monitor.BeginStep ("Building...");
+			projectToBuild = $"{projectName}.\"sln\"";
+			Stream buildResult = ExecuteCommand ("msbuild", projectToBuild, outputDirectory, monitor);
+			monitor.EndStep ();
+			return Task.FromResult (buildResult);
 		}
-
-		string GetCompilerFlags (Project project, CProjectConfiguration configuration);
-
-		string GetDefineFlags (Project project, CProjectConfiguration configuration);
-
-		BuildResult Compile (
-			Project project,
-			ProjectFileCollection projectFiles,
-			ProjectPackageCollection packages,
-			CProjectConfiguration configuration,
-			ProgressMonitor monitor);
-
-		void Clean (ProjectFileCollection projectFiles, CProjectConfiguration configuration, ProgressMonitor monitor);
 	}
+
 }

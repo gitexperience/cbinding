@@ -44,10 +44,7 @@ namespace CBinding
 		FilePath outputDirectory = new FilePath ("./bin");
 		CMakeFileFormat fileFormat;
 		CMakeToolchain cmakeToolchain;
-		public string DefaultToolchain {
-			get;
-			private set;
-		}
+
 		static readonly string [] supportedLanguages = { "C", "C++", "Objective-C", "Objective-C++" };
 
 		Regex extensions = new Regex (@"(\.c|\.c\+\+|\.cc|\.cpp|\.cxx|\.m|\.mm|\.h|\.hh|\.h\+\+|\.hm|\.hpp|\.hxx|\.in|\.txx)$",
@@ -155,8 +152,7 @@ namespace CBinding
 
 			FileService.CreateDirectory (file.ParentDirectory.Combine (outputDirectory));
 
-			DefaultToolchain = PropertyService.Get<string> ("CBinding.DefaultToolchain", new MinGW32Toolchain ().Name);
-			cmakeToolchain = CMakeToolchain.GetToolchain (DefaultToolchain);
+			cmakeToolchain = CMakeToolchain.GetToolchain ();
 			cmakeToolchain.setFileLocation (file);
 			results = await cmakeToolchain.GenerateMakefiles (fileFormat.ProjectName, outputDirectory, monitor);
 
