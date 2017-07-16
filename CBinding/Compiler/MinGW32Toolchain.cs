@@ -56,23 +56,5 @@ namespace CBinding
 				return "MinGW Makefiles";
 			}
 		}
-
-		public override string ProjectToBuild {
-			get { return projectToBuild; }
-			set {
-				projectToBuild = value;
-			}
-		}
-			public string projectToBuild = "";
-
-		public override Task<Stream> Build (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
-		{
-			monitor.BeginStep ("Building...");
-			projectToBuild = $"{projectName}.\"sln\"";
-			Stream buildResult = ExecuteCommand ("mingw32-make", projectName, outputDirectory, monitor);
-			monitor.EndStep ();
-			return Task.FromResult (buildResult);
-		}
 	}
-
 }

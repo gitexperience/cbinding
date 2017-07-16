@@ -42,7 +42,7 @@ using MonoDevelop.Core.Execution;
 namespace CBinding
 {
 	[TypeExtensionPoint ("/CBinding/Toolchains")]
-	public abstract class CMakeToolchain
+	public class CMakeToolchain
 	{
 		FilePath file;
 
@@ -185,13 +185,17 @@ namespace CBinding
 		public static CMakeToolchain GetToolchain ()
 		{
 			string toolchainName;
-			OperatingSystem os = Environment.OSVersion;
-			if (os.Platform == PlatformID.Win32Windows || os.Platform == PlatformID.Win32S || os.Platform == PlatformID.WinCE || os.Platform == PlatformID.Win32NT) {
-				toolchainName = PropertyService.Get<string> ("CBinding.DefaultToolchain", new MinGW32Toolchain ().ToolchainName);
-				return AddinManager.GetExtensionObjects<CMakeToolchain> ("/CBinding/Toolchains").FirstOrDefault<CMakeToolchain> (toolchain => toolchain.ToolchainName == toolchainName);
-			} else if (os.Platform == PlatformID.Unix)
+			toolchainName = PropertyService.Get<string> ("CBinding.DefaultToolchain", null);
+			return AddinManager.GetExtensionObjects<CMakeToolchain> ("/CBinding/Toolchains").FirstOrDefault<CMakeToolchain> (toolchain => toolchain.ToolchainName == toolchainName) ?? GetDefaultToolchain ();
+		}
+
+		private static CMakeToolchain GetDefaultToolchain ()
+		{
+			if (Platform.IsWindows)
+				return new MinGW32Toolchain ();
+			else if (Platform.IsLinux)
 				return new UnixMakeToolchain ();
-			else if (os.Platform == PlatformID.MacOSX)
+			else if (Platform.IsMac)
 				return new MacMakeToolchain ();
 			else return new MinGW32Toolchain ();
 		}
@@ -222,7 +226,28 @@ namespace CBinding
 			return Task.FromResult (results);
 		}
 
-		public abstract Task<Stream> Build (string projectName, FilePath outputDirectory, ProgressMonitor monitor);
-	}
+		public virtual Task<Stream> Build (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
+		{
+			monitor.BeginStep ("Building...");
+			Stream buildResult = ExecuteCommand ("cmake", "--build ./", outputDirectory, monitor);
+			monitor.EndStep ();
+			return Task.FromResult (buildResult);
+		}
 
+		public virtual Task<Stream> Clean (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
+		{
+			monitor.BeginStep ("Cleaning...");
+			Stream buildResult = ExecuteCommand ("cmake", "--build ./ --target clean", outputDirectory, monitor);
+			monitor.EndStep ();
+			return Task.FromResult (buildResult);
+		}
+
+		public virtual Task<Stream> Rebuild (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
+		{
+			monitor.BeginStep ("Rebuilding...");
+			Stream buildResult = ExecuteCommand ("cmake", "--build ./ --clean-first", outputDirectory, monitor);
+			monitor.EndStep ();
+			return Task.FromResult (buildResult);
+		}
+	}
 }

@@ -39,7 +39,7 @@ using MonoDevelop.Projects;
 namespace CBinding
 {
 	[Extension ("/CBinding/Toolchains")]
-	public class ClangToolchain : CMakeToolchain
+	public class ClangToolchain : MSBuildToolchain
 	{
 
 		/// <summary>
@@ -63,23 +63,5 @@ namespace CBinding
 				return "LLVM-vs2014";
 			}
 		}
-
-		public override string ProjectToBuild {
-			get { return projectToBuild; }
-			set {
-				projectToBuild = value;
-			}
-		}
-		public string projectToBuild = "";
-
-		public override Task<Stream> Build (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
-		{
-			monitor.BeginStep ("Building...");
-			projectToBuild = $"{projectName}.\"sln\"";
-			Stream buildResult = ExecuteCommand ("msbuild", projectToBuild, outputDirectory, monitor);
-			monitor.EndStep ();
-			return Task.FromResult (buildResult);
-		}
 	}
-
 }

@@ -245,6 +245,8 @@
     <Compile Include="Compiler\ClangToolchain.cs" />
     <Compile Include="Compiler\UnixMakeToolchain.cs" />
     <Compile Include="Compiler\MacMakeToolchain.cs" />
+    <Compile Include="Parser\CDocumentParser.cs" />
+    <Compile Include="Parser\CParsedDocument.cs" />
   </ItemGroup>
   <ItemGroup>
     <AddinReference Include="MonoDevelop.Refactoring" />

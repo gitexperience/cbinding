@@ -49,14 +49,5 @@ namespace CBinding
 				return "Mac Make Toolchain";
 			}
 		}
-
-		public override Task<Stream> Build (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
-		{
-			monitor.BeginStep ("Building...");
-			Stream buildResult = ExecuteCommand ("cmake", "--build ./ --clean-first", outputDirectory, monitor);
-			monitor.EndStep ();
-			return Task.FromResult (buildResult);
-		}
-
 	}
 }

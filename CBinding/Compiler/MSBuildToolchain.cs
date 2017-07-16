@@ -36,7 +36,7 @@ using MonoDevelop.Projects;
 
 namespace CBinding
 {
-	public abstract class MSBuildToolchain : CMakeToolchain
+	public class MSBuildToolchain : CMakeToolchain
 	{
 		public override string ProjectToBuild {
 			get { return projectToBuild; }
