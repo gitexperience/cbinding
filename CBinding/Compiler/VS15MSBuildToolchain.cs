@@ -33,7 +33,7 @@ using Mono.Addins;
 namespace CBinding
 {
 	[Extension ("/CBinding/Toolchains")]
-	public class VS15MSBuildToolchain : MSBuildToolchain
+	public class VS15MSBuildToolchain : VisualStudioToolchain
 	{
 
 		/// <summary>

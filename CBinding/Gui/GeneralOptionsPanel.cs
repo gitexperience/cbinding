@@ -52,11 +52,15 @@ namespace CBinding
 
 			object [] toolchains = AddinManager.GetExtensionObjects ("/CBinding/Toolchains");
 			foreach (CMakeToolchain Toolchain in toolchains) {
-				toolchain.Add (Toolchain);
+				toolchain.Add (Toolchain); 
 			}
 
-			foreach (CMakeToolchain Toolchain in toolchain)
-				cCombo.AppendText (Toolchain.ToolchainName);
+			foreach (CMakeToolchain Toolchain in toolchain) {
+				if (Toolchain.IsSupported) {
+					cCombo.AppendText (Toolchain.ToolchainName);
+				}
+			}
+				
 			
 			string TChain = PropertyService.Get<string> ("CBinding.DefaultToolchain", new MinGW32Toolchain ().ToolchainName);
 			ctagsEntry.Text = PropertyService.Get<string> ("CBinding.CTagsExecutable", "ctags");

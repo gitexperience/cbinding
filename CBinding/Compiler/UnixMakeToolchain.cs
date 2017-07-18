@@ -50,5 +50,11 @@ namespace CBinding
 				return "Unix Make Toolchain";
 			}
 		}
+
+		public override bool IsSupported {
+			get {
+				return Platform.IsLinux;
+			}
+		}
 	}
 }

@@ -56,5 +56,11 @@ namespace CBinding
 				return "MinGW Makefiles";
 			}
 		}
+
+		public override bool IsSupported {
+			get {
+				return Platform.IsWindows;
+			}
+		}
 	}
 }

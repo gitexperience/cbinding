@@ -39,7 +39,7 @@ using MonoDevelop.Projects;
 namespace CBinding
 {
 	[Extension ("/CBinding/Toolchains")]
-	public class ClangToolchain : MSBuildToolchain
+	public class ClangToolchain : VisualStudioToolchain
 	{
 
 		/// <summary>

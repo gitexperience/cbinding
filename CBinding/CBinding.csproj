@@ -238,7 +238,7 @@
     <Compile Include="Compiler\VS12MSBuildToolchain.cs" />
     <Compile Include="Compiler\ICompiler.cs" />
     <Compile Include="Compiler\CMakeToolchain.cs" />
-    <Compile Include="Compiler\MSBuildToolchain.cs" />
+    <Compile Include="Compiler\VisualStudioToolchain.cs" />
     <Compile Include="Compiler\VS15MSBuildToolchain.cs" />
     <Compile Include="Compiler\VS14MSBuildToolchain.cs" />
     <Compile Include="Compiler\MinGW32Toolchain.cs" />

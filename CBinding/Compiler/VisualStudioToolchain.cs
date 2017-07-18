@@ -36,15 +36,23 @@ using MonoDevelop.Projects;
 
 namespace CBinding
 {
-	public class MSBuildToolchain : CMakeToolchain
+	public class VisualStudioToolchain : CMakeToolchain
 	{
 		public override string ProjectToBuild {
-			get { return projectToBuild; }
+			get { 
+				return projectToBuild; 
+			} 
 			set {
 				projectToBuild = value;
 			}
 		}
 		public string projectToBuild = "";
+
+		public override bool IsSupported {
+			get {
+				return Platform.IsWindows;
+			}
+		}
 
 		public override Task<Stream> Build (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
 		{

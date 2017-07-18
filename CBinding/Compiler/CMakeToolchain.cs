@@ -54,6 +54,13 @@ namespace CBinding
 		}
 
 		/// <summary>
+		/// Gets a value indicating whether this Toolchain is supported for the Platform or not.
+		/// </summary>
+		public virtual bool IsSupported {
+			get;
+		}
+
+		/// <summary>
 		/// CMake generator id for this toolchain.
 		/// </summary>
 		public virtual string GeneratorID => "";
@@ -234,12 +241,13 @@ namespace CBinding
 			return Task.FromResult (buildResult);
 		}
 
-		public virtual Task<Stream> Clean (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
+		public virtual Task<BuildResult> Clean (string projectName, FilePath outputDirectory, ProgressMonitor monitor)
 		{
 			monitor.BeginStep ("Cleaning...");
 			Stream buildResult = ExecuteCommand ("cmake", "--build ./ --target clean", outputDirectory, monitor);
 			monitor.EndStep ();
-			return Task.FromResult (buildResult);
+			BuildResult results = ParseGenerationResult (buildResult, monitor);
+			return Task.FromResult (results);
 		}
 
 		public virtual Task<Stream> Rebuild (string projectName, FilePath outputDirectory, ProgressMonitor monitor)

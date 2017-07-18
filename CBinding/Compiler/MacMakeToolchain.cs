@@ -49,5 +49,11 @@ namespace CBinding
 				return "Mac Make Toolchain";
 			}
 		}
+
+		public override bool IsSupported {
+			get {
+				return Platform.IsMac;
+			}
+		}
 	}
 }
