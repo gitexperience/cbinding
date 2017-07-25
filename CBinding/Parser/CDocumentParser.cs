@@ -31,18 +31,17 @@ using System.Threading.Tasks;
 
 namespace CBinding.Parser
 {
-	
+
 
 	/// <summary>
 	/// clang-based document parser helper
 	/// </summary>
 	public class CDocumentParser:  TypeSystemParser
 	{
-		
 		public override Task<ParsedDocument> Parse(ParseOptions options, CancellationToken cancellationToken)
 		{
 			var fileName = options.FileName;
-			var project = (CProject)options.Project;
+			var project = (CMakeProject)options.Project;		//FIXME:- This needs to be changed.
 				if (project == null || !project.HasLibClang)
 					return Task.FromResult ((ParsedDocument)new DefaultParsedDocument (fileName));
 

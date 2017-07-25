@@ -45,9 +45,51 @@ namespace CBinding
 		CMakeFileFormat fileFormat;
 		CMakeToolchain cmakeToolchain;
 
+		/// <summary>
+		/// Occurs when a file is removed from this project.
+		/// </summary>
+		public event ProjectFileEventHandler FileRemovedFromProject;
+
+		/// <summary>
+		/// Occurs when a file is added to this project.
+		/// </summary>
+		public event ProjectFileEventHandler FileAddedToProject;
+
+		/// <summary>
+		/// Occurs when a file of this project has been modified
+		/// </summary>
+		public event ProjectFileEventHandler FileChangedInProject;
+
+		/// <summary>
+		/// Occurs when a file of this project has been renamed
+		/// </summary>
+		public event ProjectFileRenamedEventHandler FileRenamedInProject;
+
+
+		public bool HasLibClang { get; private set; }
+
+		public CLangManager ClangManager { get; private set; }
+
+		public SymbolDatabaseMediator DB { get; private set; }
+
+		public UnsavedFilesManager UnsavedFiles { get; private set; }
+
+		ProjectItemCollection items;
+		/// <summary>
+		/// Files of the project
+		/// </summary>
+		public ProjectFileCollection Files {
+			get { return projectFiles; }
+		}
+		public ProjectFileCollection projectFiles;
+
+		public ProjectItemCollection Items {
+			get { return items; }
+		}
+
 		static readonly string [] supportedLanguages = { "C", "C++", "Objective-C", "Objective-C++" };
 
-		Regex extensions = new Regex (@"(\.c|\.c\+\+|\.cc|\.cpp|\.cxx|\.m|\.mm|\.h|\.hh|\.h\+\+|\.hm|\.hpp|\.hxx|\.in|\.txx)$",
+		public static Regex extensions = new Regex (@"(\.c|\.c\+\+|\.cc|\.cpp|\.cxx|\.m|\.mm|\.h|\.hh|\.h\+\+|\.hm|\.hpp|\.hxx|\.in|\.txx)$",
 									  RegexOptions.IgnoreCase);
 
 		public override FilePath FileName {
@@ -160,19 +202,11 @@ namespace CBinding
 
 		}
 
-		protected override Task<BuildResult> OnClean (ProgressMonitor monitor, ConfigurationSelector configuration,
-													  OperationContext buildSession)
+		protected async override Task<BuildResult> OnClean (ProgressMonitor monitor, ConfigurationSelector configuration,
+															OperationContext buildSession)
 		{
-			return Task.Factory.StartNew (() => {
-				var results = new BuildResult ();
-
-				FilePath path = BaseDirectory.Combine (outputDirectory);
-				if (Directory.Exists (path)) {
-					FileService.DeleteDirectory (path);
-				}
-
-				return results;
-			});
+			BuildResult results = await cmakeToolchain.Clean (fileFormat.ProjectName, outputDirectory, monitor);
+			return results;
 		}
 
 		protected override Task OnExecute (ProgressMonitor monitor, ExecutionContext context, ConfigurationSelector configuration)
@@ -239,6 +273,8 @@ namespace CBinding
 		{
 			base.OnFileRemoved (file);
 
+			FileRemovedFromProject?.Invoke (this, new ProjectFileEventArgs ());
+
 			foreach (var target in fileFormat.Targets.Values.ToList ()) {
 				target.RemoveFile (file);
 			}
@@ -260,6 +296,8 @@ namespace CBinding
 		public override void OnFileRenamed (FilePath oldFile, FilePath newFile)
 		{
 			base.OnFileRenamed (oldFile, newFile);
+
+		//	FileRenamedInProject?.Invoke (this, new ProjectFileRenamedEventArgs ());   FIXME:- Need a fix
 
 			var oldFiles = new List<FilePath> () { oldFile };
 			var newFiles = new List<FilePath> () { newFile };
@@ -307,12 +345,24 @@ namespace CBinding
 			fileFormat.SaveAll ();
 		}
 
+		public override void OnFileChanged (FilePath file)
+		{
+			base.OnFileChanged (file);
+
+			if (!extensions.IsMatch (file))
+				return;
+
+			FileChangedInProject?.Invoke (this, new ProjectFileEventArgs ());
+		}
+
 		public override void OnFileAdded (FilePath file)
 		{
 			base.OnFileAdded (file);
 
 			if (!extensions.IsMatch (file))
 				return;
+
+			FileAddedToProject?.Invoke (this, new ProjectFileEventArgs ());
 
 			using (var dlg = new TargetPickerDialog ("Pick a target", fileFormat)) {
 				if (MessageService.ShowCustomDialog (dlg) != (int)ResponseType.Ok)
@@ -379,6 +429,26 @@ namespace CBinding
 		public CMakeProject ()
 		{
 			Initialize (this);
+		}
+
+		/// <summary>
+		/// Initialize this instance.
+		/// </summary>
+		protected override void OnInitialize ()
+		{
+			base.OnInitialize ();
+			try {
+				items = new ProjectItemCollection ();
+				projectFiles = new ProjectFileCollection ();
+				Items.Bind (projectFiles);
+				ClangManager = new CLangManager (this);
+				DB = new SymbolDatabaseMediator (this, ClangManager);
+				UnsavedFiles = new UnsavedFilesManager (this);
+				HasLibClang = true;
+			} catch (DllNotFoundException ex) {
+				LoggingService.LogError ("Could not load libclang", ex);
+				HasLibClang = false;
+			}
 		}
 	}
 }

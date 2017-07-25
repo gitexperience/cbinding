@@ -7,6 +7,7 @@ namespace CBinding
 {
 	public class FolderBasedProject : SolutionItem
 	{
+		
 		virtual public List<FilePath> GetExcludedPaths ()
 		{
 			return new List<FilePath> ();
@@ -61,5 +62,10 @@ namespace CBinding
 		virtual public void OnFilesRenamed (List<FilePath> oldFiles, List<FilePath> newFiles)
 		{
 		}
+
+		virtual public void OnFileChanged (FilePath file)
+		{
+		}
+
 	}
 }

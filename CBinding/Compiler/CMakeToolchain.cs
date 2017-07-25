@@ -38,6 +38,8 @@ using Mono.Addins;
 using MonoDevelop.Core;
 using MonoDevelop.Projects;
 using MonoDevelop.Core.Execution;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace CBinding
 {
@@ -70,9 +72,36 @@ namespace CBinding
 		/// </summary>
 		public virtual string ToolchainID => "";
 
+		/// <summary>
+		/// Creates the CMake cache entry.
+		/// </summary>
+		public virtual string CMakeCacheEntry => "";
+
 		public virtual string ProjectToBuild {
 			get;
 			set;
+		}
+
+		public string [] GetCompilerFlagsAsArray ()
+		{
+			FilePath outputDirectory = new FilePath ("./bin");
+			List<string> compileCommands = new List<string> ();
+			FilePath f = (file.ParentDirectory.Combine (outputDirectory)).Combine ("compile_commands.json");
+			if (File.Exists (f))
+			{
+				using (StreamReader r = new StreamReader ("compile_commands.json"))
+				{
+					string json = r.ReadToEnd ();
+					dynamic compilationDatabase = JsonConvert.DeserializeObject (json);
+					foreach (var commandObject in compilationDatabase) {
+						if (commandObject.command.Contains ("-o"))			//FIXME:- changes needed - Only two flags added.. 
+							compileCommands.Add ("-o");
+						if (commandObject.command.Contains ("-c"))
+							compileCommands.Add ("-c");
+					}
+				}
+			}
+			return compileCommands.ToArray ();
 		}
 
 		Tuple<int, string> GetFileAndLine (string line, string separator)
@@ -223,6 +252,10 @@ namespace CBinding
 			if(!string.IsNullOrEmpty (ToolchainID)) {
 				arguments += $" -T\"{ToolchainID}\"";
 			}
+			if(!string.IsNullOrEmpty (CMakeCacheEntry)) {
+				arguments += $" -D{CMakeCacheEntry}";
+			}
+
 			monitor.BeginStep ("Generating build files...");
 			Stream generationResult = ExecuteCommand ("cmake", arguments, outputDirectory, monitor);
 			BuildResult results = ParseGenerationResult (generationResult, monitor);

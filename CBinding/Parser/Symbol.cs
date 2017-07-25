@@ -17,7 +17,7 @@ namespace CBinding.Parser
 
 		public bool Def { get; }
 
-		public Symbol (CProject project, CXCursor cursor)
+		public Symbol (CMakeProject project, CXCursor cursor)
 		{
 			lock (project.ClangManager.SyncRoot) {
 				Represented = cursor;

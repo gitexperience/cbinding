@@ -99,7 +99,7 @@ namespace CBinding
 		/// <summary>
 		/// Initialize this instance.
 		/// </summary>
-		protected override void OnInitialize ()
+	/*	protected override void OnInitialize ()
 		{
 			base.OnInitialize ();
 			packages.Project = this;
@@ -113,7 +113,7 @@ namespace CBinding
 				HasLibClang = false;
 			}
 		}
-
+*/
 		/// <summary>
 		/// Initializes from template.
 		/// </summary>
@@ -409,7 +409,7 @@ namespace CBinding
 		/// <param name="context">Execution context.</param>
 		/// <param name="configuration">Configuration to execute.</param>
 		/// <returns>The execute.</returns>
-		protected async override Task DoExecute (ProgressMonitor monitor, MonoDevelop.Projects.ExecutionContext context, ConfigurationSelector configuration, SolutionItemRunConfiguration runConfiguration)
+/*		protected async override Task DoExecute (ProgressMonitor monitor, MonoDevelop.Projects.ExecutionContext context, ConfigurationSelector configuration, SolutionItemRunConfiguration runConfiguration)
 		{
 			var conf = (CProjectConfiguration)GetConfiguration (configuration);
 			bool pause = conf.PauseConsoleOutput;
@@ -446,7 +446,7 @@ namespace CBinding
 				console.Dispose ();
 			}
 		}
-
+*/
 		/// <summary>
 		/// Returns with output bomPresentInFile </summary>
 		/// <param name="configuration">Configuration.</param>

@@ -57,6 +57,12 @@ namespace CBinding
 			}
 		}
 
+		public override string CMakeCacheEntry {
+			get {
+				return "CMAKE_EXPORT_COMPILE_COMMANDS=1";
+			}
+		}
+
 		public override bool IsSupported {
 			get {
 				return Platform.IsWindows;

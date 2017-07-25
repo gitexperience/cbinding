@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -33,45 +33,36 @@ namespace CBinding
 		/// while reparsing is in progress in an other file could result in a fault.
 		/// </summary>
 		public readonly object SyncRoot = new object ();
-		CProject project;
+		CMakeProject project;
 		CXIndex index;
 		Dictionary<string, CXTranslationUnit> translationUnits { get; }
 		SerializationManager SerManager { get; }
-
-		Dictionary<string, bool> Loaded {get;}
+		Dictionary<string, bool> Loaded { get; }
+		CMakeToolchain cmakeToolchain;
 
 		/// <summary>
 		/// Gets the command line arguments. Use with caution, when the project is not fully loaded and there are no active configuration yet, it will fail with nullrefexception.
 		/// </summary>
 		/// <value>The arguments.</value>
-		public string [] CmdArguments (string name) {
-			var compiler = new ClangCCompiler ();
+		public string [] CmdArguments (string name)
+		{
+			cmakeToolchain = CMakeToolchain.GetToolchain ();
 			var active_configuration =
-				(CProjectConfiguration)project.GetConfiguration (IdeApp.Workspace.ActiveConfiguration);
-			var args = new List<string> (compiler.GetCompilerFlagsAsArray (project, active_configuration));
-			if (CProject.SourceExtensions.Any(o => o.Equals (new FilePath(name).Extension.ToUpper ()))) {
-				foreach (var f in project.Files) {
-					if (CProject.HeaderExtensions.Any (o => o.Equals (f.FilePath.Extension.ToUpper ()))) {	
-						if (File.Exists (f.Name + ".pch")) {
-							args.Add ("-include-pch");
-							args.Add (f.Name + ".pch");
-						}
-					}
-				}
-			}
+				project.GetConfiguration (IdeApp.Workspace.ActiveConfiguration);
+			var args = new List<string> (cmakeToolchain.GetCompilerFlagsAsArray ());
 			return args.ToArray ();
 		}
-			
+
 		/// <summary>
 		/// Constructor
 		/// </summary>
 		/// <param name="proj">
-		/// A <see cref="CProject"/> reference: project which the manager manages
+		/// A <see cref="CMakeProject"/> reference: project which the manager manages
 		/// </param>
-		public CLangManager (CProject proj)
+		public CLangManager (CMakeProject proj)
 		{
 			project = proj;
-			index = clang.createIndex (0, 0);
+			index = clang.createIndex (0, 0);			// FIXME:- This is always giving DLLNOTFOUNDEXCEPTION during initialization of CMakeProject.
 			SerManager = new SerializationManager (project, this, index);
 			translationUnits = new Dictionary<string, CXTranslationUnit> ();
 			Loaded = new Dictionary<string, bool> ();
@@ -97,12 +88,12 @@ namespace CBinding
 		/// A <see cref="CXTranslationUnit"/>: The Translation unit created
 		/// </returns>
 		/// <param name = "force">Set to true when an existing Translation Unit should be disposed and remade.</param>
-		public CXTranslationUnit CreateTranslationUnit (string fileName, CXUnsavedFile[] unsavedFiles, bool force = false) 
+		public CXTranslationUnit CreateTranslationUnit (string fileName, CXUnsavedFile[] unsavedFiles, bool force = false)
 		{
 			lock (SyncRoot) {
 				if (!Loaded.ContainsKey (fileName))
 					Loaded.Add (fileName, false);
-				if (!translationUnits.ContainsKey (fileName)) 
+				if (!translationUnits.ContainsKey (fileName))
 					AddToTranslationUnits (fileName, unsavedFiles, force);
 				return translationUnits [fileName];
 			}
@@ -122,12 +113,12 @@ namespace CBinding
 		{
 			lock (SyncRoot) {
 				var options = clang.defaultEditingTranslationUnitOptions ();// & ~(uint)CXTranslationUnit_Flags.PrecompiledPreamble; <- without this we have NO ERROR MARKERS! 
-			
+
 				if (!force) {
 					if (!SerializationManager.SerFormIsUpToDate (fileName)) {
 						SerManager.Update (fileName, CmdArguments (fileName));
 					}
-					translationUnits.Add (fileName, clang.createTranslationUnit (index, fileName + ".pch"));
+					translationUnits.Add (fileName, clang.createTranslationUnit (index, fileName));
 					Loaded [fileName] = true;
 				} else {
 					translationUnits.Add (fileName, clang.parseTranslationUnit (
@@ -180,7 +171,7 @@ namespace CBinding
 			var unsavedFiles = project.UnsavedFiles.Get ();
 			foreach (var f in project.Files) {
 				if (extensions.Any (o => o.Equals (f.FilePath.Extension.ToUpper ()))) {
-					if (translationUnits.ContainsKey (f.Name)) 
+					if (translationUnits.ContainsKey (f.Name))
 						RemoveTranslationUnit (f.Name);
 					CreateTranslationUnit (f.Name, unsavedFiles.ToArray ());
 				}
@@ -190,12 +181,11 @@ namespace CBinding
 		/// <summary>
 		/// Update Translation units with the correct compiler arguments. Subscribed to event: Project.DefaultConfigurationChanged
 		/// </summary>
-		void HandleDefaultConfigurationChange (object sender, EventArgs args) 
+		void HandleDefaultConfigurationChange (object sender, EventArgs args)
 		{
 			lock (SyncRoot) {
 				//to precompile headers before parsing CPP files
-				ReparseFilesWithExtension (CProject.HeaderExtensions);
-				ReparseFilesWithExtension (CProject.SourceExtensions);
+				ReparseFilesWithExtension (CMakeProject.extensions.Split ("|").ToArray ());
 			}
 		}
 
@@ -213,22 +203,22 @@ namespace CBinding
 		/// <returns>IntPtr which should be marshalled as CXCodeCompleteResults</returns>
 		public IntPtr CodeComplete (
 			CodeCompletionContext completionContext,
-			CXUnsavedFile[] unsavedFiles,
+			CXUnsavedFile [] unsavedFiles,
 			string fileName)
 		{
-				uint complete_line = (uint) (completionContext.TriggerLine);
-				uint complete_column = (uint) (completionContext.TriggerLineOffset + 1);
-				uint numUnsavedFiles = (uint) (unsavedFiles.Length);
-				uint options = (uint) CXCodeComplete_Flags.IncludeCodePatterns | (uint)CXCodeComplete_Flags.IncludeCodePatterns;
+			uint complete_line = (uint)(completionContext.TriggerLine);
+			uint complete_column = (uint)(completionContext.TriggerLineOffset + 1);
+			uint numUnsavedFiles = (uint)(unsavedFiles.Length);
+			uint options = (uint)CXCodeComplete_Flags.IncludeCodePatterns | (uint)CXCodeComplete_Flags.IncludeCodePatterns;
 			lock (SyncRoot) {
 				CXTranslationUnit TU = translationUnits [fileName];
 				return clang.codeCompleteAt (
 									  TU,
-									  fileName, 
-									  complete_line, 
-									  complete_column, 
-									  unsavedFiles, 
-									  numUnsavedFiles, 
+									  fileName,
+									  complete_line,
+									  complete_column,
+									  unsavedFiles,
+									  numUnsavedFiles,
 									  options);
 			}
 		}
@@ -253,8 +243,8 @@ namespace CBinding
 				CXSourceLocation loc = clang.getLocation (
 					TU,
 					file,
-					(uint) (location.Line),
-					(uint) (location.Column)
+					(uint)(location.Line),
+					(uint)(location.Column)
 				);
 				return clang.getCursor (TU, loc);
 			}
@@ -334,21 +324,21 @@ namespace CBinding
 		/// </returns>
 		public SourceLocation GetSourceLocation (CXSourceLocation loc)
 		{
-				CXFile file;
-				uint line, column, offset;
-				clang.getExpansionLocation (loc, out file, out line, out column, out offset);
-				var fileName = GetFileNameString (file);
+			CXFile file;
+			uint line, column, offset;
+			clang.getExpansionLocation (loc, out file, out line, out column, out offset);
+			var fileName = GetFileNameString (file);
 
-				CheckForBom (fileName);
+			CheckForBom (fileName);
 
-				if (IsBomPresentInFile (fileName)) {
-					return line == 1 ? 
-						new SourceLocation (fileName, line, column - 3, offset - 3) 
-							:
-						new SourceLocation (fileName, line, column, offset - 3);
-					//else column is good as it is, only align offset
-				}
-				return new SourceLocation (fileName, line, column, offset);
+			if (IsBomPresentInFile (fileName)) {
+				return line == 1 ?
+					new SourceLocation (fileName, line, column - 3, offset - 3)
+						:
+					new SourceLocation (fileName, line, column, offset - 3);
+				//else column is good as it is, only align offset
+			}
+			return new SourceLocation (fileName, line, column, offset);
 		}
 
 
@@ -378,7 +368,7 @@ namespace CBinding
 		/// <param name="visitor">
 		/// A <see cref="RenameHandlerDialog"/>: a visitor
 		/// </param>
-		public void FindReferences(RenameHandlerDialog visitor)
+		public void FindReferences (RenameHandlerDialog visitor)
 		{
 			lock (SyncRoot) {
 				foreach (var T in translationUnits) {
@@ -403,7 +393,7 @@ namespace CBinding
 		/// </returns>
 		public string GetCursorSpelling (CXCursor cursor)
 		{
-			lock(SyncRoot) {
+			lock (SyncRoot) {
 				CXString cxstring = clang.getCursorSpelling (cursor);
 				string spelling = Marshal.PtrToStringAnsi (clang.getCString (cxstring));
 				clang.disposeString (cxstring);
@@ -422,7 +412,7 @@ namespace CBinding
 		/// </returns>
 		public string GetCursorDisplayName (CXCursor cursor)
 		{
-			lock(SyncRoot) {
+			lock (SyncRoot) {
 				CXString cxstring = clang.getCursorDisplayName (cursor);
 				string spelling = Marshal.PtrToStringAnsi (clang.getCString (cxstring));
 				clang.disposeString (cxstring);
@@ -507,7 +497,7 @@ namespace CBinding
 		{
 			if (project.Files.Any (arg => arg.Name.Equals (fileName))) {
 				using (var s = new FileStream (fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) {
-					var BOM = new byte[3];
+					var BOM = new byte [3];
 					s.Read (BOM, 0, 3);
 					bool bomPresent = (BOM [0] == 0xEF && BOM [1] == 0xBB && BOM [2] == 0xBF);
 					BomPresentInFile (fileName, bomPresent);
@@ -523,13 +513,11 @@ namespace CBinding
 
 				CheckForBom (e.ProjectFile.Name);
 
-				if (!project.Loading && !project.IsCompileable (e.ProjectFile.Name) &&
-					e.ProjectFile.BuildAction == BuildAction.Compile) {
+				if (!project.Loading && e.ProjectFile.BuildAction == BuildAction.Compile) {
 					e.ProjectFile.BuildAction = BuildAction.None;
 				}
 
-				if (!project.Loading && e.ProjectFile.BuildAction == BuildAction.Compile)
-					TypeSystemService.ParseFile (project, e.ProjectFile.Name);
+				SerManager.Add (e.ProjectFile.Name, CmdArguments (e.ProjectFile.Name));
 			}
 		}
 
@@ -539,27 +527,26 @@ namespace CBinding
 
 				CheckForBom (e.ProjectFile.Name);
 
-				if (!project.Loading && !project.IsCompileable (e.ProjectFile.Name) &&
+				if (!project.Loading &&
 					e.ProjectFile.BuildAction == BuildAction.Compile) {
 					e.ProjectFile.BuildAction = BuildAction.None;
 				}
 
-				SerManager.Update (e.ProjectFile.Name, CmdArguments(e.ProjectFile.Name));
+				SerManager.Update (e.ProjectFile.Name, CmdArguments (e.ProjectFile.Name));
 			}
 		}
 
 		void HandleRemoval (object sender, ProjectFileEventArgs args)
 		{
 			foreach (var e in args) {
-				if (!project.Loading && !project.IsCompileable (e.ProjectFile.Name) &&
-					e.ProjectFile.BuildAction == BuildAction.Compile) {
+				if (!project.Loading && e.ProjectFile.BuildAction == BuildAction.Compile) {
 					e.ProjectFile.BuildAction = BuildAction.None;
 				}
 				if (e.ProjectFile.BuildAction == BuildAction.Compile)
 					RemoveTranslationUnit (e.ProjectFile.Name);
-					
+
 				SerManager.Remove (e.ProjectFile.Name);
-				}
+			}
 		}
 
 		void HandleRename (object sender, ProjectFileRenamedEventArgs args)
@@ -571,11 +558,11 @@ namespace CBinding
 			}
 		}
 
-		public CXTranslationUnit Reparse (string name, CXUnsavedFile[] unsavedFilesArray, CancellationToken token)
+		public CXTranslationUnit Reparse (string name, CXUnsavedFile [] unsavedFilesArray, CancellationToken token)
 		{
 			lock (SyncRoot) {
 				CXTranslationUnit TU = translationUnits [name];
-				if (!Loaded[name]) {
+				if (!Loaded [name]) {
 					if (!token.IsCancellationRequested) {
 						clang.reparseTranslationUnit (
 							TU,
@@ -594,7 +581,7 @@ namespace CBinding
 			}
 		}
 
-		protected virtual void OnDispose(bool disposing)
+		protected virtual void OnDispose (bool disposing)
 		{
 			lock (SyncRoot) {
 				if (disposing) {
@@ -610,17 +597,17 @@ namespace CBinding
 			}
 		}
 
-		~CLangManager()
+		~CLangManager ()
 		{
-			OnDispose(false);
+			OnDispose (false);
 		}
 
 		#region IDisposable implementation
 
 		void IDisposable.Dispose ()
 		{
-			OnDispose(true); 
-			GC.SuppressFinalize(this);
+			OnDispose (true);
+			GC.SuppressFinalize (this);
 		}
 
 		#endregion

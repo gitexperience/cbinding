@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ClangSharp;
 using MonoDevelop.Ide;
@@ -11,11 +11,11 @@ namespace CBinding
 	public class SerializationManager
 	{
 		CLangManager Manager { get; }
-		CProject project { get; }
+		CMakeProject project { get; }
 		CXIndex Index { get; }
 		public List<string> Headers { get; } = new List<string> ();
 
-		public SerializationManager (CProject proj, CLangManager man, CXIndex ind)
+		public SerializationManager (CMakeProject proj, CLangManager man, CXIndex ind)
 		{
 			Manager = man;
 			project = proj;
@@ -33,9 +33,9 @@ namespace CBinding
 
 		public static string SerializedName (string name)
 		{
-			return CProject.HeaderExtensions.Any (o => o.Equals (new FilePath (name).Extension.ToUpper ())) ?
-			name + ".pch" 
-				: 
+			return CMakeProject.extensions.IsMatch (new FilePath (name).Extension.ToUpper ()) ?
+			name + ".pch"						// need a check 
+				:
 			name + ".ser";
 		}
 
@@ -72,7 +72,7 @@ namespace CBinding
 
 		void AddToIncludes (string name)
 		{
-			if (!CProject.HeaderExtensions.Any (o => o.Equals (new FilePath (name).Extension.ToUpper ())))
+			if (!CMakeProject.extensions.IsMatch (new FilePath (name).Extension.ToUpper ()))
 				return;
 			Headers.Add (name);
 		}
@@ -94,7 +94,6 @@ namespace CBinding
 				Headers.Remove (name);
 			if (File.Exists (SerializedName (name)))
 				File.Delete (SerializedName(name));
-			
 		}
 
 		public void Rename (string oldName, string newName, string [] args)

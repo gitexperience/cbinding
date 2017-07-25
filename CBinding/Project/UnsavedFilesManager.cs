@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using MonoDevelop.Ide;
 using MonoDevelop.Core.Text;
 using MonoDevelop.Ide.Gui;
@@ -12,10 +12,10 @@ namespace CBinding
 	public class UnsavedFilesManager : IDisposable
 	{
 		Document current;
-		CProject Project { get; }
+		CMakeProject Project { get; }
 		ConcurrentDictionary<string, UnsavedFile> UnsavedFileCollection { get; }
 
-		public UnsavedFilesManager (CProject proj)
+		public UnsavedFilesManager (CMakeProject proj)
 		{
 			Project = proj;
 			IdeApp.Workbench.ActiveDocumentChanged += HandleChange;
@@ -61,7 +61,7 @@ namespace CBinding
 		void HandleTextChange (object sender, TextChangeEventArgs e)
 		{
 			UnsavedFileCollection [current.Name].IsDirty = true;
-			UnsavedFileCollection [current.Name].Text = 
+			UnsavedFileCollection [current.Name].Text =
 				e.RemovalLength != 0 ?
 					UnsavedFileCollection [current.Name].Text.Remove (e.Offset, e.RemovalLength)
 					:
@@ -98,7 +98,7 @@ namespace CBinding
 
 		void IDisposable.Dispose ()
 		{
-			OnDispose(true); 
+			OnDispose(true);
 			GC.SuppressFinalize(this);
 		}
 

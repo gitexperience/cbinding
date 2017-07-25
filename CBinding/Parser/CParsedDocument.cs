@@ -33,21 +33,21 @@ using MonoDevelop.Ide.TypeSystem;
 
 namespace CBinding.Parser
 {
-	
+
 	public class CParsedDocument : DefaultParsedDocument {
 		public CXTranslationUnit TU;
 		public CLangManager Manager { get; private set;}
-		public CProject Project { get; set;}
+		public CMakeProject Project { get; set; }
 		List<CXUnsavedFile> unsavedFiles;
 
-		void Initialize (CProject proj)
+		void Initialize (CMakeProject proj)
 		{
 			Project = proj;
 			Manager = proj.ClangManager;
 			unsavedFiles = new List<CXUnsavedFile> ();
 		}
 
-		public CParsedDocument(CProject proj, string fileName) : base(fileName)
+		public CParsedDocument (CMakeProject proj, string fileName) : base (fileName)
 		{
 			Initialize (proj);
 			unsavedFiles = Project.UnsavedFiles.Get ();

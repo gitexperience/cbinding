@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -14,13 +14,13 @@ namespace CBinding
 	public class SymbolDatabaseMediator : IDisposable
 	{
 		public object Lock { get; } = new object ();
-		CProject ContainingProject { get; }
+		CMakeProject ContainingProject { get; }
 		CLangManager Manager { get; }
 		public SqliteConnection Connection { get; private set; }
 		Dictionary<string, SqliteCommand> InsertCommands { get; } = new Dictionary <string, SqliteCommand>();
 		bool Initialized { get; set; } = false;
 
-		public SymbolDatabaseMediator (CProject proj, CLangManager manager)
+		public SymbolDatabaseMediator (CMakeProject proj, CLangManager manager)
 		{
 			ContainingProject = proj;
 			Manager = manager;
@@ -107,7 +107,7 @@ namespace CBinding
 				}
 			}
 		}
-			
+
 		void HandleRename (object sender, ProjectFileRenamedEventArgs args)
 		{
 			foreach (var e in args){
@@ -263,7 +263,7 @@ namespace CBinding
 						}
 					}
 				}
-			}		
+			}
 		}
 
 		void HandleDispose (object sender, EventArgs e)
@@ -290,7 +290,7 @@ namespace CBinding
 
 		void IDisposable.Dispose ()
 		{
-			OnDispose(true); 
+			OnDispose(true);
 			GC.SuppressFinalize(this);
 		}
 
