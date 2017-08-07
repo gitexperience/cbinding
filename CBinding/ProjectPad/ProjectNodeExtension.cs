@@ -44,16 +44,16 @@ namespace CBinding.ProjectPad
 	{
 		public override bool CanBuildNode (Type dataType)
 		{
-			return typeof(CProject).IsAssignableFrom (dataType);
+			return typeof(CMakeProject).IsAssignableFrom (dataType);
 		}
 		
 		public override void BuildChildNodes (ITreeBuilder builder, object dataObject)
 		{
-			CProject p = dataObject as CProject;
+			CMakeProject p = dataObject as CMakeProject;
 			
 			if (p == null) return;
 			
-			builder.AddChild (p.Packages);
+//			builder.AddChild (p.Packages);
 		}
 	}
 }

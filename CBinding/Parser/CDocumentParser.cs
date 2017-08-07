@@ -26,6 +26,7 @@
 
 using System;
 using MonoDevelop.Ide.TypeSystem;
+using MonoDevelop.Projects;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -41,7 +42,7 @@ namespace CBinding.Parser
 		public override Task<ParsedDocument> Parse(ParseOptions options, CancellationToken cancellationToken)
 		{
 			var fileName = options.FileName;
-			var project = (CMakeProject)options.Project;		//FIXME:- This needs to be changed.
+			var project = (CMakeProject)(options.Project as SolutionItem);
 				if (project == null || !project.HasLibClang)
 					return Task.FromResult ((ParsedDocument)new DefaultParsedDocument (fileName));
 

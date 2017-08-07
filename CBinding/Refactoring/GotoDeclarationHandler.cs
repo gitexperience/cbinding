@@ -3,6 +3,7 @@ using ClangSharp;
 using MonoDevelop.Ide;
 using CBinding.Parser;
 using MonoDevelop.Core;
+using MonoDevelop.Projects;
 using System;
 using MonoDevelop.Ide.FindInFiles;
 
@@ -21,7 +22,7 @@ namespace CBinding.Refactoring
 			var monitor = IdeApp.Workbench.ProgressMonitors.GetSearchProgressMonitor (true, true);
 			try {
 				var doc = IdeApp.Workbench.ActiveDocument;
-				var project = (CProject)doc.Project;
+				var project = (CMakeProject)(doc.Project as SolutionItem);
 				CXCursor cursor = project.ClangManager.GetCursor (doc.FileName, doc.Editor.CaretLocation);
 				CXCursor referredCursor = project.ClangManager.GetCursorReferenced (cursor);
 				bool leastOne = false;
@@ -36,7 +37,7 @@ namespace CBinding.Refactoring
 				}
 				if (!leastOne) {
 					var loc = project.ClangManager.GetCursorLocation (referredCursor);
-					IdeApp.Workbench.OpenDocument (loc.FileName, project, loc.Line, loc.Column);
+					IdeApp.Workbench.OpenDocument (loc.FileName, doc.Project, loc.Line, loc.Column);
 				}
 			} catch (Exception ex) {
 				if (monitor != null)
@@ -56,8 +57,8 @@ namespace CBinding.Refactoring
 		public void Update (CommandInfo info)
 		{
 			var doc = IdeApp.Workbench.ActiveDocument;
-			CProject project;
-			if (doc == null || (project = doc.Project as CProject) == null || !project.HasLibClang) {
+			CMakeProject project;
+			if (doc == null || (project = (CMakeProject)(doc.Project as SolutionItem)) == null || !project.HasLibClang) {
 				info.Enabled = info.Visible = false;
 				return;
 			}

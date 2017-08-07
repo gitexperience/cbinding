@@ -127,6 +127,31 @@ namespace CBinding
 			return name;
 		}
 
+		public string MatchingFile (string sourceFile)
+		{
+			string filenameStub = Path.GetFileNameWithoutExtension (sourceFile);
+			bool wantHeader = !CMakeProject.IsHeaderFile (sourceFile);
+
+			foreach (ProjectFile file in this.Files) {
+				if (filenameStub == Path.GetFileNameWithoutExtension (file.Name)
+				   && (wantHeader == IsHeaderFile (file.Name))) {
+					return file.Name;
+				}
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Determines if a header file is specified by filename.
+		/// </summary>
+		/// <returns><c>true</c> if a header file is specified by filename; otherwise, <c>false</c>.</returns>
+		/// <param name="filename">Filename.</param>
+		public static bool IsHeaderFile (string filename)
+		{
+			return (0 <= Array.IndexOf (extensions.Split ("|").ToArray (), Path.GetExtension (filename.ToUpper ())));
+		}
+
 		public void LoadFrom (FilePath file)
 		{
 			this.file = file;
@@ -438,9 +463,6 @@ namespace CBinding
 		{
 			base.OnInitialize ();
 			try {
-				items = new ProjectItemCollection ();
-				projectFiles = new ProjectFileCollection ();
-				Items.Bind (projectFiles);
 				ClangManager = new CLangManager (this);
 				DB = new SymbolDatabaseMediator (this, ClangManager);
 				UnsavedFiles = new UnsavedFilesManager (this);

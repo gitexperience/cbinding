@@ -37,21 +37,15 @@ namespace CBinding
 	
 	public class ProjectPackageEventArgs : EventArgs
 	{
-		CProject project;
-		Package package;
+		CMakeProject project;
 		
-		public ProjectPackageEventArgs(CProject project, Package package)
+		public ProjectPackageEventArgs(CMakeProject project)
 		{
 			this.project = project;
-			this.package = package;
 		}
 		
-		public CProject Project {
+		public CMakeProject Project {
 			get { return project; }
-		}
-		
-		public Package Package {
-			get { return package; }
 		}
 	}
 }

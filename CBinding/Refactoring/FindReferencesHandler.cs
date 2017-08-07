@@ -6,6 +6,7 @@ using ClangSharp;
 using System.Collections.Generic;
 using MonoDevelop.Ide.FindInFiles;
 using MonoDevelop.Ide.Gui;
+using MonoDevelop.Projects;
 using CBinding.Parser;
 
 namespace CBinding.Refactoring
@@ -16,7 +17,7 @@ namespace CBinding.Refactoring
 	/// </summary>
 	public class FindReferencesHandler
 	{
-		CProject project;
+		CMakeProject project;
 		CXCursor cursorReferenced;
 		string UsrReferenced;
 		public string File;
@@ -27,7 +28,7 @@ namespace CBinding.Refactoring
 		/// </summary>
 		/// <param name="proj">Proj.</param>
 		/// <param name="doc">Document.</param>
-		public FindReferencesHandler (CProject proj, Document doc)
+		public FindReferencesHandler (CMakeProject proj, Document doc)
 		{
 			project = proj;
 			if (!proj.HasLibClang)
@@ -63,7 +64,7 @@ namespace CBinding.Refactoring
 				var reference = new Reference (project, cursor, range);
 
 				//FIXME: don't block!
-				Document doc = IdeApp.Workbench.OpenDocument (reference.FileName, project, false).Result;
+				Document doc = IdeApp.Workbench.OpenDocument (reference.FileName, (SolutionItem)project as Project, false).Result;
 				if (!references.Contains (reference)
 					//this check is needed because explicit namespace qualifiers, eg: "std" from std::toupper
 					//are also found when finding eg:toupper references, but has the same cursorkind as eg:"toupper"
@@ -79,7 +80,7 @@ namespace CBinding.Refactoring
 		/// Finds the references and reports them to the IDE.
 		/// </summary>
 		/// <param name="project">Project.</param>
-		public void FindRefs (CProject project)
+		public void FindRefs (CMakeProject project)
 		{
 			var monitor = IdeApp.Workbench.ProgressMonitors.GetSearchProgressMonitor (true, true);
 			try {			

@@ -7,6 +7,7 @@ using MonoDevelop.Ide;
 using MonoDevelop.Core;
 using MonoDevelop.Components.Commands;
 using MonoDevelop.Core.Text;
+using MonoDevelop.Projects;
 using System.Text;
 using System.Text.RegularExpressions;
 using CBinding.Parser;
@@ -15,7 +16,7 @@ namespace CBinding
 {
 	public partial class RenameHandlerDialog : Gtk.Dialog
 	{
-		protected CProject project;
+		protected CMakeProject project;
 		protected CXCursor cursorReferenced;
 		protected string UsrReferenced;
 		protected string spelling;
@@ -23,7 +24,7 @@ namespace CBinding
 		protected Document document;
 		public string File;
 
-		public RenameHandlerDialog (CProject proj, Document doc)
+		public RenameHandlerDialog (CMakeProject proj, Document doc)
 		{
 			project = proj;
 			cursorReferenced = project.ClangManager.GetCursorReferenced(
@@ -73,7 +74,7 @@ namespace CBinding
 				var reference = new Reference (project, cursor, range);
 
 				//FIXME: don't block!
-				Document doc = IdeApp.Workbench.OpenDocument (reference.FileName, project, false).Result;
+				Document doc = IdeApp.Workbench.OpenDocument (reference.FileName, (SolutionItem)project as Project, false).Result;
 				if (!references.Contains (reference)
 					//this check is needed because explicit namespace qualifiers, eg: "std" from std::toupper
 					//are also found when finding eg:toupper references, but has the same cursorkind as eg:"toupper"
@@ -90,7 +91,7 @@ namespace CBinding
 		/// </summary>
 		/// <param name="project">Project.</param>
 		/// <param name="cursor">Cursor.</param>
-		public async void FindRefsAndRename (CProject project, CXCursor cursor)
+		public async void FindRefsAndRename (CMakeProject project, CXCursor cursor)
 		{
 			try {
 				
@@ -105,7 +106,7 @@ namespace CBinding
 				foreach (var reference in references) {
 					try {
 						//FIXME: do we actually need to open the documents?
-						var doc = await IdeApp.Workbench.OpenDocument (reference.FileName, project, false);
+						var doc = await IdeApp.Workbench.OpenDocument (reference.FileName, (SolutionItem)project as Project, false);
 						if(!offsets.ContainsKey (reference.FileName)) {
 							offsets.Add (reference.FileName, 0);
 							tmp.Add(reference.FileName, new StringBuilder(doc.Editor.Text));

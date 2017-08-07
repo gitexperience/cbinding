@@ -48,6 +48,7 @@ using MonoDevelop.Ide.Editor.Extension;
 using MonoDevelop.Ide.Gui;
 using MonoDevelop.Ide.Gui.Content;
 using MonoDevelop.Ide.TypeSystem;
+using MonoDevelop.Projects;
 using ClangSharp;
 using CBinding.Parser;
 using CBinding.Refactoring;
@@ -283,7 +284,7 @@ namespace CBinding
 
 		public override Task<ICompletionDataList> HandleCodeCompletionAsync (CodeCompletionContext completionContext, CompletionTriggerInfo triggerInfo, CancellationToken token = default (CancellationToken))
 		{
-			var project = (CProject)DocumentContext.Project;
+			var project = (CMakeProject)(DocumentContext.Project as SolutionItem);
 			if (project == null || !project.HasLibClang) {
 				return Task.FromResult ((ICompletionDataList)null);
 			}
@@ -396,7 +397,7 @@ namespace CBinding
 			if (completionChar != '(' && completionChar != ',')
 				return Task.FromResult ((ParameterHintingResult) null);
 
-			var project = (CProject)DocumentContext.Project;
+			var project = (CMakeProject)(DocumentContext.Project as SolutionItem);
 
 			if (project == null || !project.HasLibClang)
 				return Task.FromResult ((ParameterHintingResult) null);
@@ -535,11 +536,11 @@ namespace CBinding
 		[CommandHandler (MonoDevelop.DesignerSupport.Commands.SwitchBetweenRelatedFiles)]
 		protected void Run ()
 		{
-			var cp = (CProject)DocumentContext.Project;
+			var cp = (CMakeProject)(DocumentContext.Project as SolutionItem);
 			if (cp != null) {
 				string match = cp.MatchingFile (this.DocumentContext.Name);
 				if (match != null)
-					IdeApp.Workbench.OpenDocument (match, cp, true);
+					IdeApp.Workbench.OpenDocument (match, DocumentContext.Project, true);
 			}
 		}
 
@@ -550,7 +551,7 @@ namespace CBinding
 		[CommandUpdateHandler (MonoDevelop.DesignerSupport.Commands.SwitchBetweenRelatedFiles)]
 		protected void Update (CommandInfo info)
 		{
-			var cp = (CProject)DocumentContext.Project;
+			var cp = (CMakeProject)(DocumentContext.Project as SolutionItem);
 			info.Visible = info.Visible = cp != null && cp.MatchingFile (this.DocumentContext.Name) != null;
 		}
 		
@@ -629,7 +630,7 @@ namespace CBinding
 			if (doc == null || doc.FileName == FilePath.Null)
 				return;
 			var findReferencesHandler = new FindReferencesHandler (
-				(CProject)DocumentContext.Project,
+				(CMakeProject)(DocumentContext.Project as SolutionItem),
 				doc
 			);
 			findReferencesHandler.Update (ci);
@@ -645,7 +646,7 @@ namespace CBinding
 			if (doc == null || doc.FileName == FilePath.Null)
 				return;
 			var findReferencesHandler = new FindReferencesHandler (
-				(CProject)DocumentContext.Project,
+				(CMakeProject)(DocumentContext.Project as SolutionItem),
 				doc
 			);
 			findReferencesHandler.Run ();
@@ -674,7 +675,7 @@ namespace CBinding
 			var doc = IdeApp.Workbench.ActiveDocument;
 			if (doc == null || doc.FileName == FilePath.Null)
 				return;
-			var renameHandler = new RenameHandlerDialog ((CProject)DocumentContext.Project, doc);
+			var renameHandler = new RenameHandlerDialog ((CMakeProject)(DocumentContext.Project as SolutionItem), doc);
 			renameHandler.Update (ci);
 		}
 
@@ -687,7 +688,7 @@ namespace CBinding
 			var doc = IdeApp.Workbench.ActiveDocument;
 			if (doc == null || doc.FileName == FilePath.Null)
 				return;
-			var renameHandler = new RenameHandlerDialog ((CProject)DocumentContext.Project, doc);
+			var renameHandler = new RenameHandlerDialog ((CMakeProject)(DocumentContext.Project as SolutionItem), doc);
 			renameHandler.RunRename ();
 		}
 

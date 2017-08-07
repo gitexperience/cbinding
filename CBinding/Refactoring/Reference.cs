@@ -10,7 +10,7 @@ namespace CBinding.Refactoring
 	/// </summary>
 	public class Reference : IComparable
 	{
-		CProject project;
+		CMakeProject project;
 		public SourceLocation Begin { get; }
 		public SourceLocation End {	get; }
 		public CXSourceRange SourceRange { get; set; }
@@ -25,7 +25,7 @@ namespace CBinding.Refactoring
 		/// <param name="proj">Project.</param>
 		/// <param name="cursor">Cursor referenced.</param>
 		/// <param name="sourceRange">Source location and range.</param>
-		public Reference(CProject proj, CXCursor cursor, CXSourceRange sourceRange) {
+		public Reference(CMakeProject proj, CXCursor cursor, CXSourceRange sourceRange) {
 			project = proj;
 			Cursor = cursor;
 			SourceRange = sourceRange;

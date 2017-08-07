@@ -50,7 +50,7 @@ namespace CBinding.ProjectPad
 		{
 			Project p = parentNode.DataItem as Project;
 			
-			if (p is CProject)
+			if (p is CMakeProject)
 				attributes |= NodeAttributes.Hidden;
 		}
 	}
