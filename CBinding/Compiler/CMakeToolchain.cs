@@ -222,10 +222,12 @@ namespace CBinding
 		{
 			string toolchainName;
 			toolchainName = PropertyService.Get<string> ("CBinding.DefaultToolchain", null);
-			return AddinManager.GetExtensionObjects<CMakeToolchain> ("/CBinding/Toolchains").FirstOrDefault<CMakeToolchain> (toolchain => toolchain.ToolchainName == toolchainName) ?? GetDefaultToolchain ();
+			return AddinManager.GetExtensionObjects<CMakeToolchain> ("/CBinding/Toolchains")
+				               .FirstOrDefault<CMakeToolchain> (toolchain => toolchain.ToolchainName == toolchainName)
+				               ?? GetDefaultToolchain ();
 		}
 
-		private static CMakeToolchain GetDefaultToolchain ()
+		public static CMakeToolchain GetDefaultToolchain ()
 		{
 			if (Platform.IsWindows)
 				return new MinGW32Toolchain ();

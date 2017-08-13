@@ -4,7 +4,7 @@ namespace CBinding.Parser
 {
 	public class Enumeration : Symbol
 	{
-		public Enumeration (CProject proj, CXCursor cursor) : base (proj, cursor)
+		public Enumeration (CMakeProject proj, CXCursor cursor) : base (proj, cursor)
 		{
 		}
 	}

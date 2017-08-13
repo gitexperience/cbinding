@@ -8,7 +8,7 @@ namespace CBinding.Parser
 {
 	public class FunctionTemplate : Function
 	{
-		public FunctionTemplate (CProject proj, CXCursor cursor) : base (proj, cursor)
+		public FunctionTemplate (CMakeProject proj, CXCursor cursor) : base (proj, cursor)
 		{
 		}
 

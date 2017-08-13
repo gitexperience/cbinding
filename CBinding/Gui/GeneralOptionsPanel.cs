@@ -62,13 +62,14 @@ namespace CBinding
 			}
 				
 			
-			string TChain = PropertyService.Get<string> ("CBinding.DefaultToolchain", new MinGW32Toolchain ().ToolchainName);
+			string toolchainName = PropertyService.Get<string> ("CBinding.DefaultToolchain", null)
+			                                      ?? CMakeToolchain.GetDefaultToolchain ().ToolchainName;
 			ctagsEntry.Text = PropertyService.Get<string> ("CBinding.CTagsExecutable", "ctags");
 			parseSystemTagsCheck.Active = PropertyService.Get<bool> ("CBinding.ParseSystemTags", true);
 			parseLocalVariablesCheck.Active = PropertyService.Get<bool> ("CBinding.ParseLocalVariables", false);
 
 			foreach (CMakeToolchain Toolchain in toolchains) {
-				if (Toolchain.ToolchainName == TChain) {
+				if (Toolchain.ToolchainName == toolchainName) {
 					default_toolchain = Toolchain;
 				}
 			}

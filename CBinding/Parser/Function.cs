@@ -6,7 +6,7 @@ namespace CBinding.Parser
 {
 	public class Function : Symbol
 	{
-		public Function (CProject proj, CXCursor cursor) : base (proj, cursor)
+		public Function (CMakeProject proj, CXCursor cursor) : base (proj, cursor)
 		{
 		}
 	}

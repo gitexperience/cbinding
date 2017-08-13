@@ -74,23 +74,16 @@ namespace CBinding
 
 		public UnsavedFilesManager UnsavedFiles { get; private set; }
 
-		ProjectItemCollection items;
-		/// <summary>
-		/// Files of the project
-		/// </summary>
-		public ProjectFileCollection Files {
-			get { return projectFiles; }
-		}
-		public ProjectFileCollection projectFiles;
-
-		public ProjectItemCollection Items {
-			get { return items; }
-		}
-
 		static readonly string [] supportedLanguages = { "C", "C++", "Objective-C", "Objective-C++" };
 
-		public static Regex extensions = new Regex (@"(\.c|\.c\+\+|\.cc|\.cpp|\.cxx|\.m|\.mm|\.h|\.hh|\.h\+\+|\.hm|\.hpp|\.hxx|\.in|\.txx)$",
+		static Regex extensions = new Regex (@"(\.c|\.c\+\+|\.cc|\.cpp|\.cxx|\.m|\.mm|\.h|\.hh|\.h\+\+|\.hm|\.hpp|\.hxx|\.in|\.txx)$",
 									  RegexOptions.IgnoreCase);
+
+		public static bool IsCFile (string file) {
+			if (extensions.IsMatch (file))
+				return true;
+			return false;
+		}
 
 		public override FilePath FileName {
 			get {
@@ -132,10 +125,10 @@ namespace CBinding
 			string filenameStub = Path.GetFileNameWithoutExtension (sourceFile);
 			bool wantHeader = !CMakeProject.IsHeaderFile (sourceFile);
 
-			foreach (ProjectFile file in this.Files) {
-				if (filenameStub == Path.GetFileNameWithoutExtension (file.Name)
-				   && (wantHeader == IsHeaderFile (file.Name))) {
-					return file.Name;
+			foreach (FilePath file in OnGetItemFiles (false)) {
+				if (filenameStub == Path.GetFileNameWithoutExtension (file.FileName)
+				    && (wantHeader == IsHeaderFile (file.FileName))) {
+					return file.FileName;
 				}
 			}
 
@@ -374,7 +367,7 @@ namespace CBinding
 		{
 			base.OnFileChanged (file);
 
-			if (!extensions.IsMatch (file))
+			if (!IsCFile (file))
 				return;
 
 			FileChangedInProject?.Invoke (this, new ProjectFileEventArgs ());
@@ -384,7 +377,7 @@ namespace CBinding
 		{
 			base.OnFileAdded (file);
 
-			if (!extensions.IsMatch (file))
+			if (!IsCFile (file))
 				return;
 
 			FileAddedToProject?.Invoke (this, new ProjectFileEventArgs ());
@@ -407,7 +400,7 @@ namespace CBinding
 
 			var filesToAdd = new List<FilePath> ();
 			foreach (var file in files) {
-				if (extensions.IsMatch (file))
+				if (IsCFile (file))
 					filesToAdd.Add (file);
 			}
 

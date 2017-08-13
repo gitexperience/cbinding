@@ -33,8 +33,8 @@ namespace CBinding
 
 		public static string SerializedName (string name)
 		{
-			return CMakeProject.extensions.IsMatch (new FilePath (name).Extension.ToUpper ()) ?
-			name + ".pch"						// need a check 
+			return CMakeProject.IsCFile (new FilePath (name).Extension.ToUpper ()) ?
+			name + ".pch"
 				:
 			name + ".ser";
 		}
@@ -72,7 +72,7 @@ namespace CBinding
 
 		void AddToIncludes (string name)
 		{
-			if (!CMakeProject.extensions.IsMatch (new FilePath (name).Extension.ToUpper ()))
+			if (!CMakeProject.IsCFile (new FilePath (name).Extension.ToUpper ()))
 				return;
 			Headers.Add (name);
 		}

@@ -11,7 +11,7 @@ using MonoDevelop.Projects;
 
 namespace CBinding
 {
-	public class SymbolDatabaseMediator : IDisposable
+	public class SymbolDatabaseMediator : CMakeProject, IDisposable
 	{
 		public object Lock { get; } = new object ();
 		CMakeProject ContainingProject { get; }
@@ -236,14 +236,14 @@ namespace CBinding
 
 		public IEnumerable<SourceLocation> getDeclarations (CXCursor cursor)
 		{
-			foreach (var file in ContainingProject.Files) {
+			foreach (var file in OnGetItemFiles (false)) {
 				using (var selectDeclarations = Connection.CreateCommand ()) {
-					selectDeclarations.CommandText = "SELECT OFFSET FROM " + TableName (file.Name) + " WHERE USR=@USR;";
+					selectDeclarations.CommandText = "SELECT OFFSET FROM " + TableName (file.FileName) + " WHERE USR=@USR;";
 					selectDeclarations.CommandType = CommandType.Text;
 					selectDeclarations.Parameters.AddWithValue ("@USR", Manager.GetCursorUsrString (cursor));
 					using(var result = selectDeclarations.ExecuteReader ()) {
 						while (result.Read ()) {
-							yield return new SourceLocation (file.Name, 0, 0, (uint)result.GetInt32 (0));
+							yield return new SourceLocation (file.FileName, 0, 0, (uint)result.GetInt32 (0));
 						}
 					}
 				}
@@ -252,14 +252,14 @@ namespace CBinding
 
 		public IEnumerable<SourceLocation> GetDefinitionLocation (CXCursor cursor)
 		{
-			foreach (var file in ContainingProject.Files) {
-				using (var selectDeclarations = Connection.CreateCommand ()) {
-					selectDeclarations.CommandText = "SELECT OFFSET FROM " + TableName (file.Name) + " WHERE USR=@USR AND ISDEF=1;";
-					selectDeclarations.CommandType = CommandType.Text;
-					selectDeclarations.Parameters.AddWithValue ("@USR", Manager.GetCursorUsrString (cursor));
-					using (var result = selectDeclarations.ExecuteReader ()) {
-						while (result.Read ()) {
-							yield return new SourceLocation (file.Name, 0, 0, (uint)result.GetInt32 (0));
+			foreach (var file in OnGetItemFiles (false)) {
+			using (var selectDeclarations = Connection.CreateCommand ()) {
+				selectDeclarations.CommandText = "SELECT OFFSET FROM " + TableName (file.FileName) + " WHERE USR=@USR AND ISDEF=1;";
+				selectDeclarations.CommandType = CommandType.Text;
+				selectDeclarations.Parameters.AddWithValue ("@USR", Manager.GetCursorUsrString (cursor));
+				using (var result = selectDeclarations.ExecuteReader ()) {
+					while (result.Read ()) {
+						yield return new SourceLocation (file.FileName, 0, 0, (uint)result.GetInt32 (0));
 						}
 					}
 				}

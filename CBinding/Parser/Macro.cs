@@ -4,7 +4,7 @@ namespace CBinding.Parser
 {
 	public class Macro : Symbol
 	{
-		public Macro (CProject proj, CXCursor cursor) : base (proj, cursor)
+		public Macro (CMakeProject proj, CXCursor cursor) : base (proj, cursor)
 		{
 		}
 	}

@@ -21,7 +21,7 @@ namespace CBinding
 	/// and the translation units itself are not.
 	/// For more information see the field SyncRoot
 	/// </summary>
-	public class CLangManager : IDisposable
+	public class CLangManager : CMakeProject, IDisposable
 	{
 		/// <summary>
 		/// The sync root.
@@ -166,14 +166,14 @@ namespace CBinding
 			}
 		}
 
-		void ReparseFilesWithExtension (string [] extensions)
+		void ReparseFilesWithExtension ()
 		{
 			var unsavedFiles = project.UnsavedFiles.Get ();
-			foreach (var f in project.Files) {
-				if (extensions.Any (o => o.Equals (f.FilePath.Extension.ToUpper ()))) {
-					if (translationUnits.ContainsKey (f.Name))
-						RemoveTranslationUnit (f.Name);
-					CreateTranslationUnit (f.Name, unsavedFiles.ToArray ());
+			foreach (var f in OnGetItemFiles (false)) {
+				if(IsCFile (f.Extension.ToUpper ())) {
+					if (translationUnits.ContainsKey (f.FileName))
+						RemoveTranslationUnit (f.FileName);
+					CreateTranslationUnit (f.FileName, unsavedFiles.ToArray ());
 				}
 			}
 		}
@@ -185,7 +185,7 @@ namespace CBinding
 		{
 			lock (SyncRoot) {
 				//to precompile headers before parsing CPP files
-				ReparseFilesWithExtension (CMakeProject.extensions.Split ("|").ToArray ());
+				ReparseFilesWithExtension ();
 			}
 		}
 
@@ -495,7 +495,7 @@ namespace CBinding
 		/// <param name="fileName"></param>
 		public void CheckForBom (string fileName)
 		{
-			if (project.Files.Any (arg => arg.Name.Equals (fileName))) {
+			if (OnGetItemFiles (false).Any (arg => arg.FileName.Equals (fileName))) {
 				using (var s = new FileStream (fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) {
 					var BOM = new byte [3];
 					s.Read (BOM, 0, 3);
@@ -510,13 +510,7 @@ namespace CBinding
 		void HandleAddition (object sender, ProjectFileEventArgs args)
 		{
 			foreach (var e in args) {
-
 				CheckForBom (e.ProjectFile.Name);
-
-				if (!project.Loading && e.ProjectFile.BuildAction == BuildAction.Compile) {
-					e.ProjectFile.BuildAction = BuildAction.None;
-				}
-
 				SerManager.Add (e.ProjectFile.Name, CmdArguments (e.ProjectFile.Name));
 			}
 		}
@@ -524,14 +518,7 @@ namespace CBinding
 		void HandleChange (object sender, ProjectFileEventArgs args)
 		{
 			foreach (var e in args) {
-
 				CheckForBom (e.ProjectFile.Name);
-
-				if (!project.Loading &&
-					e.ProjectFile.BuildAction == BuildAction.Compile) {
-					e.ProjectFile.BuildAction = BuildAction.None;
-				}
-
 				SerManager.Update (e.ProjectFile.Name, CmdArguments (e.ProjectFile.Name));
 			}
 		}
@@ -539,12 +526,7 @@ namespace CBinding
 		void HandleRemoval (object sender, ProjectFileEventArgs args)
 		{
 			foreach (var e in args) {
-				if (!project.Loading && e.ProjectFile.BuildAction == BuildAction.Compile) {
-					e.ProjectFile.BuildAction = BuildAction.None;
-				}
-				if (e.ProjectFile.BuildAction == BuildAction.Compile)
-					RemoveTranslationUnit (e.ProjectFile.Name);
-
+				RemoveTranslationUnit (e.ProjectFile.Name);
 				SerManager.Remove (e.ProjectFile.Name);
 			}
 		}

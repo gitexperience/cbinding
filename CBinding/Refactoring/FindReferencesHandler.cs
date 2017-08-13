@@ -64,7 +64,7 @@ namespace CBinding.Refactoring
 				var reference = new Reference (project, cursor, range);
 
 				//FIXME: don't block!
-				Document doc = IdeApp.Workbench.OpenDocument (reference.FileName, (SolutionItem)project as Project, false).Result;
+				Document doc = IdeApp.Workbench.OpenDocument (reference.FileName, project, false).Result;
 				if (!references.Contains (reference)
 					//this check is needed because explicit namespace qualifiers, eg: "std" from std::toupper
 					//are also found when finding eg:toupper references, but has the same cursorkind as eg:"toupper"
