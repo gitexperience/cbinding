@@ -19,7 +19,7 @@ using MonoDevelop.Ide;
 
 namespace CBinding.ProjectPad
 {
-	class SystemFolderNodeBuilder : FolderNodeBuilder
+	class SystemFolderNodeBuilder : TypeNodeBuilder
 	{
 		public override Type NodeDataType {
 			get {
@@ -71,11 +71,6 @@ namespace CBinding.ProjectPad
 		{
 			var folder = (SystemFolder)dataObject;
 			return new SystemFolder (folder.Path.ParentDirectory, folder.ParentWorkspaceObject, false);
-		}
-
-		public override string GetFolderPath (object dataObject)
-		{
-			return ((SystemFolder)dataObject).Path;
 		}
 	}
 
