@@ -4,6 +4,7 @@ using System.IO;
 
 using MonoDevelop.Core;
 using MonoDevelop.Ide;
+using MonoDevelop.Ide.Gui.Components;
 using MonoDevelop.Projects;
 
 namespace CBinding
@@ -22,12 +23,17 @@ namespace CBinding
 
 namespace CBinding.ProjectPad
 {
-	class SystemFileNodeBuilder : MonoDevelop.Ide.Gui.Pads.ProjectPad.SystemFileNodeBuilder
+	class SystemFileNodeBuilder : TypeNodeBuilder
 	{
 		public override Type CommandHandlerType {
 			get {
 				return typeof (SystemFileNodeCommandHandler);
 			}
+		}
+
+		public override string GetNodeName (ITreeNavigator thisNode, object dataObject)
+		{
+			return ((SolutionFolder)dataObject).Name;
 		}
 
 		public override Type NodeDataType {
