@@ -60,13 +60,15 @@ namespace CBinding
 
 		void HandleTextChange (object sender, TextChangeEventArgs e)
 		{
-			UnsavedFileCollection [current.Name].IsDirty = true;
-			UnsavedFileCollection [current.Name].Text =
-				e.RemovalLength != 0 ?
-					UnsavedFileCollection [current.Name].Text.Remove (e.Offset, e.RemovalLength)
-					:
-					UnsavedFileCollection [current.Name].Text.Insert (e.Offset, e.InsertedText.Text);
-		}
+			foreach (TextChange tc in e.TextChanges) {
+				UnsavedFileCollection [current.Name].IsDirty = true;
+				UnsavedFileCollection [current.Name].Text =
+					tc.RemovalLength != 0 ?
+						UnsavedFileCollection [current.Name].Text.Remove (tc.Offset, tc.RemovalLength)
+						:
+						UnsavedFileCollection [current.Name].Text.Insert (tc.Offset, tc.InsertedText.Text);
+			}
+				}
 
 		public List<CXUnsavedFile> Get ()
 		{
